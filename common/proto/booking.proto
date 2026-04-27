@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package booking;
+
+option go_package = "cinema-reservation/common/proto/pb";
+
+service BookingService {
+  // Ottiene la mappa dei posti per una specifica proiezione
+  rpc GetSeats(SeatsRequest) returns (SeatsResponse);
+  
+  // Tenta di prenotare un posto usando una determinata strategia
+  rpc ReserveSeat(ReserveRequest) returns (ReserveResponse);
+}
+
+message SeatsRequest {
+  string movie_id = 1;
+}
+
+message SeatsResponse {
+  string movie_id = 1;
+  map<int32, bool> seats = 2; // ID Posto -> Occupato
+}
+
+message ReserveRequest {
+  string movie_id = 1;
+  int32 seat_id = 2;
+  string user_id = 3;
+  // Strategy: "manual", "auto_best", "social_distancing"
+  string strategy = 4; 
+}
+
+message ReserveResponse {
+  bool success = 1;
+  string message = 2;
+  string booking_id = 3;
+}

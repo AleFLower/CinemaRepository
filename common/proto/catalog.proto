@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package catalog;
+
+option go_package = "cinema-reservation/common/proto/pb";
+
+service CatalogService {
+  rpc GetMovies(Empty) returns (MovieList);
+  rpc GetMovie(MovieRequest) returns (Movie);
+}
+
+message Empty {}
+
+message MovieRequest {
+  string id = 1;
+}
+
+message Movie {
+  string id = 1;
+  string title = 2;
+  string show_time = 3;
+  int32 total_seats = 4;
+}
+
+message MovieList {
+  repeated Movie movies = 1;
+}
