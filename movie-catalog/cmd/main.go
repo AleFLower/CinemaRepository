@@ -17,7 +17,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterCatalogServiceServer(s, internal.NewCatalogService())
+	pb.RegisterCatalogServiceServer(s, internal.NewCatalogService("movies.json"))
 	
 	// Abilitiamo la reflection per i test con grpcurl
 	reflection.Register(s)

@@ -35,7 +35,7 @@ func main() {
 	s := grpc.NewServer()
 	
 	// Passiamo la connessione NATS al servizio
-	pb.RegisterBookingServiceServer(s, internal.NewBookingService(nc))
+	pb.RegisterBookingServiceServer(s, internal.NewBookingService(nc,"movies.json"))
 	
 	reflection.Register(s)
 

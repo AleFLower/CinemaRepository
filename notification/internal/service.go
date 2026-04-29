@@ -59,7 +59,8 @@ func (s *NotificationService) Start() {
 }
 
 func (s *NotificationService) sendEmail(e BookingEvent) {
-	// Qui simuli l'invio dell'email
-	log.Printf(" [EMAIL SENT] Gentile utente %s, la tua prenotazione %s per il film %s (Posto: %d) è confermata!", 
-		e.UserID, e.BookingID, e.MovieID, e.SeatID)
+    // In un sistema reale qui faresti una query al Catalog col ProjectionID 
+    // per ottenere il titolo del film e l'orario
+    log.Printf(" [NOTIFY] Invio conferma: Prenotazione %s - Proiezione %s - Posto %d", 
+        e.BookingID, e.MovieID, e.SeatID)
 }

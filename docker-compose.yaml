@@ -2,80 +2,58 @@ version: '3.8'
 
 services:
   # --- INFRASTRUTTURA ---
-  
-  # Message Broker per la Coreografia (Pub/Sub)
+
   nats:
     image: nats:2.10-alpine
-    container_name: nats-broker
     command: "-js"
-    networks:
-      default:
-        aliases:
-          - nats
-    expose:
-      - "4222"
     ports:
       - "8222:8222"
 
+  # 🧠 Redis (stato condiviso)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
   # --- MICROSERVIZI ---
 
-  # API Gateway: Unico punto di accesso REST
   gateway:
     build:
       context: .
       dockerfile: gateway/Dockerfile
-    container_name: api-gateway
     ports:
       - "8080:8080"
     environment:
       - CATALOG_SERVICE_ADDR=catalog-service:50052
-      # Passiamo gli indirizzi delle due istanze per lo Sharding
-      - BOOKING_SERVICE_ADDRS=booking-1:50051,booking-2:50051
+      - BOOKING_SERVICE_ADDR=booking:50051
     depends_on:
-      - nats
-      - movie-catalog
-      - booking-1
-      - booking-2
+      - catalog-service
+      - booking
 
-  # Movie Catalog: Stateless (Lista film)
-  movie-catalog:
+  catalog-service:
     build:
       context: .
       dockerfile: movie-catalog/Dockerfile
-    container_name: catalog-service
     environment:
       - PORT=50052
 
-  # Booking Service - Istanza 1 (Gestisce metà dei film)
-  booking-1:
+  # 🎟️ Booking Service (SCALABILE)
+  booking:
     build:
       context: .
       dockerfile: booking/Dockerfile
-    container_name: booking-1
     environment:
       - PORT=50051
       - NATS_URL=nats://nats:4222
+      - REDIS_ADDR=redis:6379
     depends_on:
       - nats
+      - redis
 
-  # Booking Service - Istanza 2 (Gestisce l'altra metà dei film)
-  booking-2:
-    build:
-      context: .
-      dockerfile: booking/Dockerfile
-    container_name: booking-2
-    environment:
-      - PORT=50051
-      - NATS_URL=nats://nats:4222
-    depends_on:
-      - nats
-
-  # Notification Service: Coreografia asincrona
   notification-service:
     build:
       context: .
       dockerfile: notification/Dockerfile
-    container_name: notification-service
     environment:
       - NATS_URL=nats://nats:4222
     depends_on:

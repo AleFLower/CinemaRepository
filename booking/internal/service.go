@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"os"
 
 	"github.com/nats-io/nats.go"
 	pb "cinema-reservation/common/proto/pb"
@@ -31,41 +32,45 @@ type BookingService struct {
 	nc          *nats.Conn
 }
 
-func NewBookingService(nc *nats.Conn) *BookingService {
-	return &BookingService{
-		projections: make(map[string]*RoomState),
-		nc:          nc,
-	}
+func NewBookingService(nc *nats.Conn, configPath string) *BookingService {
+    file, err := os.ReadFile(configPath)
+    if err != nil {
+        log.Fatalf("Errore config: %v", err)
+    }
+
+    var config []struct {
+        ID         string `json:"id"`
+        TotalSeats int    `json:"total_seats"`
+    }
+    json.Unmarshal(file, &config)
+
+    projections := make(map[string]*RoomState)
+    for _, p := range config {
+        seats := make(map[int32]bool)
+        for i := int32(1); i <= int32(p.TotalSeats); i++ {
+            seats[i] = false
+        }
+        projections[p.ID] = &RoomState{Seats: seats}
+        log.Printf("[INIT] Proiezione %s caricata (%d posti)", p.ID, p.TotalSeats)
+    }
+
+    return &BookingService{projections: projections, nc: nc}
 }
 
-func (s *BookingService) getOrCreateRoom(movieID string) *RoomState {
-	s.mu.RLock()
-	room, exists := s.projections[movieID]
-	s.mu.RUnlock()
-
-	if exists {
-		return room
-	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	if room, exists := s.projections[movieID]; exists {
-		return room
-	}
-
-	newSeats := make(map[int32]bool)
-	for i := int32(1); i <= 50; i++ {
-		newSeats[i] = false
-	}
-
-	newRoom := &RoomState{Seats: newSeats}
-	s.projections[movieID] = newRoom
-	return newRoom
+func (s *BookingService) getRoom(movieID string) (*RoomState, error) {
+    // Non serve Lock su s.projections perché la mappa non viene più modificata dopo il New
+    room, exists := s.projections[movieID]
+    if !exists {
+        return nil, fmt.Errorf("film con ID %s non disponibile o sala inesistente", movieID)
+    }
+    return room, nil
 }
 
 func (s *BookingService) GetSeats(ctx context.Context, req *pb.SeatsRequest) (*pb.SeatsResponse, error) {
-	room := s.getOrCreateRoom(req.MovieId)
+	room, err := s.getRoom(req.MovieId)
+        if err != nil {
+         return nil, err // Ritorna errore gRPC
+        }
 
 	room.Mu.Lock()
 	defer room.Mu.Unlock()
@@ -80,57 +85,51 @@ func (s *BookingService) GetSeats(ctx context.Context, req *pb.SeatsRequest) (*p
 		Seats:   seatsCopy,
 	}, nil
 }
-
 func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest) (*pb.ReserveResponse, error) {
-	room := s.getOrCreateRoom(req.MovieId)
+   log.Printf("[BOOKING SERVICE] Ricevuta richiesta per Proiezione: %s, Posto: %d", req.MovieId, req.SeatId)
+    // 1. Recupero la proiezione specifica
+    room, err := s.getRoom(req.MovieId)
+    if err != nil {
+        return &pb.ReserveResponse{Success: false, Message: err.Error()}, nil
+    }
 
-	strategy, err := SeatStrategyFactory(req.Strategy)
-	if err != nil {
-		return &pb.ReserveResponse{
-			Success: false,
-			Message: fmt.Sprintf("Errore strategia: %v", err),
-		}, nil
-	}
+    // 2. Validazione Range Posti (dinamica sulla sala della proiezione)
+    if req.SeatId < 1 || req.SeatId > int32(len(room.Seats)) {
+        return &pb.ReserveResponse{
+            Success: false,
+            Message: fmt.Sprintf("Posto non valido per questa sala (Max: %d)", len(room.Seats)),
+        }, nil
+    }
 
-	room.Mu.Lock()
-	defer room.Mu.Unlock()
+    // 3. Factory Strategia
+    strategy, _ := SeatStrategyFactory(req.Strategy)
 
-	// VALIDAZIONE
-	if err := strategy.Validate(room, req.SeatId); err != nil {
-		return &pb.ReserveResponse{
-			Success: false,
-			Message: err.Error(),
-		}, nil
-	}
+    room.Mu.Lock()
+    defer room.Mu.Unlock()
 
-	// UPDATE
-	room.Seats[req.SeatId] = true
-	bookingID := fmt.Sprintf("RES-%s-%d", req.MovieId, req.SeatId)
+    // 4. Validazione Algoritmica (NoGap/Social)
+    if err := strategy.Validate(room, req.SeatId); err != nil {
+        return &pb.ReserveResponse{Success: false, Message: err.Error()}, nil
+    }
 
-	// EVENTO
-	event := BookingEvent{
-		BookingID: bookingID,
-		UserID:    req.UserId,
-		MovieID:   req.MovieId,
-		SeatID:    req.SeatId,
-	}
+    // 5. Occupazione e Evento
+    room.Seats[req.SeatId] = true
+    bookingID := fmt.Sprintf("RES-%s-%d", req.MovieId, req.SeatId)
 
-	eventData, err := json.Marshal(event)
-	if err != nil {
-		log.Printf("errore serializzazione evento: %v", err)
-	}
+    event := BookingEvent{
+        BookingID: bookingID,
+        UserID:    req.UserId,
+        MovieID:   req.MovieId, // Qui rappresenta l'ID proiezione
+        SeatID:    req.SeatId,
+    }
+    
+    eventData, _ := json.Marshal(event)
+    js, _ := s.nc.JetStream()
+    js.Publish("bookings.created", eventData)
 
-	js, err := s.nc.JetStream()
-	if err == nil {
-		_, err = js.Publish("bookings.created", eventData)
-		if err != nil {
-			log.Printf("errore invio evento: %v", err)
-		}
-	}
-
-	return &pb.ReserveResponse{
-		Success:   true,
-		Message:   "Prenotazione effettuata con successo!",
-		BookingId: bookingID,
-	}, nil
+    return &pb.ReserveResponse{
+        Success: true,
+        Message: "Prenotazione confermata",
+        BookingId: bookingID,
+    }, nil
 }

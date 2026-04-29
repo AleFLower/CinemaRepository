@@ -14,7 +14,13 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
+
+# 1. Copia il binario compilato dallo stage builder
 COPY --from=builder /catalog-service .
+
+# 2. COPIA QUI IL FILE JSON 
+# Assicurati che il percorso sorgente sia corretto rispetto alla root del build context
+COPY ./movies.json .
 
 # Porta gRPC
 EXPOSE 50052
