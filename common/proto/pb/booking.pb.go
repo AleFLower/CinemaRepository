@@ -23,7 +23,7 @@ const (
 
 type SeatsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MovieId       string                 `protobuf:"bytes,1,opt,name=movie_id,json=movieId,proto3" json:"movie_id,omitempty"`
+	ProjectionId  string                 `protobuf:"bytes,1,opt,name=projection_id,json=projectionId,proto3" json:"projection_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -58,16 +58,16 @@ func (*SeatsRequest) Descriptor() ([]byte, []int) {
 	return file_common_proto_booking_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *SeatsRequest) GetMovieId() string {
+func (x *SeatsRequest) GetProjectionId() string {
 	if x != nil {
-		return x.MovieId
+		return x.ProjectionId
 	}
 	return ""
 }
 
 type SeatsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	MovieId       string                 `protobuf:"bytes,1,opt,name=movie_id,json=movieId,proto3" json:"movie_id,omitempty"`
+	ProjectionId  string                 `protobuf:"bytes,1,opt,name=projection_id,json=projectionId,proto3" json:"projection_id,omitempty"`
 	Seats         map[int32]bool         `protobuf:"bytes,2,rep,name=seats,proto3" json:"seats,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"` // ID Posto -> Occupato
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -103,9 +103,9 @@ func (*SeatsResponse) Descriptor() ([]byte, []int) {
 	return file_common_proto_booking_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SeatsResponse) GetMovieId() string {
+func (x *SeatsResponse) GetProjectionId() string {
 	if x != nil {
-		return x.MovieId
+		return x.ProjectionId
 	}
 	return ""
 }
@@ -118,12 +118,10 @@ func (x *SeatsResponse) GetSeats() map[int32]bool {
 }
 
 type ReserveRequest struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	MovieId string                 `protobuf:"bytes,1,opt,name=movie_id,json=movieId,proto3" json:"movie_id,omitempty"`
-	SeatId  int32                  `protobuf:"varint,2,opt,name=seat_id,json=seatId,proto3" json:"seat_id,omitempty"`
-	UserId  string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
-	// Strategy: "manual", "auto_best", "social_distancing"
-	Strategy      string `protobuf:"bytes,4,opt,name=strategy,proto3" json:"strategy,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ProjectionId  string                 `protobuf:"bytes,1,opt,name=projection_id,json=projectionId,proto3" json:"projection_id,omitempty"`
+	SeatId        int32                  `protobuf:"varint,2,opt,name=seat_id,json=seatId,proto3" json:"seat_id,omitempty"`
+	UserId        string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -158,9 +156,9 @@ func (*ReserveRequest) Descriptor() ([]byte, []int) {
 	return file_common_proto_booking_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *ReserveRequest) GetMovieId() string {
+func (x *ReserveRequest) GetProjectionId() string {
 	if x != nil {
-		return x.MovieId
+		return x.ProjectionId
 	}
 	return ""
 }
@@ -175,13 +173,6 @@ func (x *ReserveRequest) GetSeatId() int32 {
 func (x *ReserveRequest) GetUserId() string {
 	if x != nil {
 		return x.UserId
-	}
-	return ""
-}
-
-func (x *ReserveRequest) GetStrategy() string {
-	if x != nil {
-		return x.Strategy
 	}
 	return ""
 }
@@ -250,21 +241,20 @@ var File_common_proto_booking_proto protoreflect.FileDescriptor
 
 const file_common_proto_booking_proto_rawDesc = "" +
 	"\n" +
-	"\x1acommon/proto/booking.proto\x12\abooking\")\n" +
-	"\fSeatsRequest\x12\x19\n" +
-	"\bmovie_id\x18\x01 \x01(\tR\amovieId\"\x9d\x01\n" +
-	"\rSeatsResponse\x12\x19\n" +
-	"\bmovie_id\x18\x01 \x01(\tR\amovieId\x127\n" +
+	"\x1acommon/proto/booking.proto\x12\abooking\"3\n" +
+	"\fSeatsRequest\x12#\n" +
+	"\rprojection_id\x18\x01 \x01(\tR\fprojectionId\"\xa7\x01\n" +
+	"\rSeatsResponse\x12#\n" +
+	"\rprojection_id\x18\x01 \x01(\tR\fprojectionId\x127\n" +
 	"\x05seats\x18\x02 \x03(\v2!.booking.SeatsResponse.SeatsEntryR\x05seats\x1a8\n" +
 	"\n" +
 	"SeatsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\bR\x05value:\x028\x01\"y\n" +
-	"\x0eReserveRequest\x12\x19\n" +
-	"\bmovie_id\x18\x01 \x01(\tR\amovieId\x12\x17\n" +
+	"\x05value\x18\x02 \x01(\bR\x05value:\x028\x01\"g\n" +
+	"\x0eReserveRequest\x12#\n" +
+	"\rprojection_id\x18\x01 \x01(\tR\fprojectionId\x12\x17\n" +
 	"\aseat_id\x18\x02 \x01(\x05R\x06seatId\x12\x17\n" +
-	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1a\n" +
-	"\bstrategy\x18\x04 \x01(\tR\bstrategy\"d\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\"d\n" +
 	"\x0fReserveResponse\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12\x1d\n" +

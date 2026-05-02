@@ -41,7 +41,7 @@ func NewGatewayHandler(
 }
 
 //
-// 🎬 GET /movies
+// GET /movies
 //
 func (h *GatewayHandler) GetMovies(c *gin.Context) {
 	resp, err := h.catalogClient.GetMovies(context.Background(), &pb.Empty{})
@@ -56,14 +56,14 @@ func (h *GatewayHandler) GetMovies(c *gin.Context) {
 }
 
 //
-// 💺 GET /seats/:id
+// GET /seats/:id
 //
 func (h *GatewayHandler) GetSeats(c *gin.Context) {
 	projectionID := c.Param("id")
 
 	resp, err := h.bookingClient.GetSeats(
 		context.Background(),
-		&pb.SeatsRequest{MovieId: projectionID},
+		&pb.SeatsRequest{ProjectionId: projectionID},
 	)
 
 	if err != nil {
@@ -74,7 +74,7 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 		return
 	}
 
-	// 🔽 Ordiniamo i posti
+	//  Ordiniamo i posti
 	keys := make([]int, 0, len(resp.Seats))
 	for k := range resp.Seats {
 		keys = append(keys, int(k))
@@ -90,20 +90,19 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"movie_id": resp.MovieId,
+		"projection_id": resp.ProjectionId,
 		"seats":    seats,
 	})
 }
 
 //
-// 🎟️ POST /book
+// POST /book
 //
 func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 	var req struct {
 		ProjectionID string `json:"projection_id" binding:"required"`
 		SeatID       int32  `json:"seat_id" binding:"required"`
 		UserID       string `json:"user_id" binding:"required"`
-		Strategy     string `json:"strategy"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -118,10 +117,9 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 		return h.bookingClient.ReserveSeat(
 			context.Background(),
 			&pb.ReserveRequest{
-				MovieId:  req.ProjectionID,
+				ProjectionId:  req.ProjectionID,
 				SeatId:   req.SeatID,
 				UserId:   req.UserID,
-				Strategy: req.Strategy,
 			},
 		)
 	})
@@ -142,3 +140,4 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 }
+

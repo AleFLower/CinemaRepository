@@ -29,7 +29,7 @@ func NewCatalogService(configPath string) *CatalogService {
 		log.Fatalf("Errore nel parsing del JSON: %v", err)
 	}
 
-	fmt.Printf("Catalog caricato con successo: %d film trovati\n", len(movies))
+	log.Printf("Catalog caricato: %d film trovati", len(movies))
 
 	return &CatalogService{
 		movies: movies,
@@ -37,8 +37,8 @@ func NewCatalogService(configPath string) *CatalogService {
 }
 
 func (s *CatalogService) GetMovies(ctx context.Context, req *pb.Empty) (*pb.MovieList, error) {
-log.Println("📚 Catalog instance serving request")
-	fmt.Println("Richiesta lista film ricevuta")
+log.Println("Catalog instance serving request")
+	log.Println("Catalog instance serving request")
 	
 	// Trasformiamo lo slice di struct in un puntatore a MovieList
 	// Usiamo i puntatori perché il file .pb.go generato si aspetta []*Movie

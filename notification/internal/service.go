@@ -7,7 +7,6 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
-// BookingEvent deve corrispondere alla struttura definita nel Booking Service
 type BookingEvent struct {
 	BookingID string `json:"booking_id"`
 	UserID    string `json:"user_id"`
@@ -23,44 +22,36 @@ func NewNotificationService(nc *nats.Conn) *NotificationService {
 	return &NotificationService{nc: nc}
 }
 
-// Start ascolta i messaggi e definisce la logica di reazione
 func (s *NotificationService) Start() {
-    js, err := s.nc.JetStream()
-    if err != nil {
-        log.Fatalf("Errore JetStream: %v", err)
-    }
+	js, err := s.nc.JetStream()
+	if err != nil {
+		log.Fatalf("JetStream error: %v", err)
+	}
 
-    // Assicuriamoci che lo stream esista
-    _, err = js.AddStream(&nats.StreamConfig{
-        Name:     "BOOKINGS_STREAM",
-        Subjects: []string{"bookings.created"},
-        Storage:  nats.FileStorage,
-    })
-
-    // Sottoscrizione DURABLE con DELIVER ALL
-    _, err = js.QueueSubscribe("bookings.created", "notification_group", func(m *nats.Msg) {
-        var event BookingEvent
-        if err := json.Unmarshal(m.Data, &event); err != nil {
-            return
+	// Sottoscrizione Queue (bilanciata se scali il servizio notifiche)
+	// Ascolta lo stesso subject del booking: bookings.event.*
+	_, err = js.QueueSubscribe("bookings.event.*", "notification_group", func(m *nats.Msg) {
+		var event BookingEvent
+		if err := json.Unmarshal(m.Data, &event); err != nil {
+			m.Ack() // Ignora messaggi malformati
+			return
 		}
-        s.sendEmail(event)
-        m.Ack()
-    }, 
-    nats.Durable("worker-notification"), // Nome unico per ricordare la posizione
-    nats.ManualAck(),                    // Conferma manuale per sicurezza
-    nats.DeliverAll(),                   // <--- QUESTA RECUPERA I MESSAGGI PASSATI
-    )
 
-    if err != nil {
-        log.Fatalf("Errore sottoscrizione: %v", err)
-    }
+		s.sendEmail(event)
+		m.Ack() // Conferma ricezione
+	}, 
+	nats.Durable("notification-worker"), 
+	nats.ManualAck(),
+	nats.DeliverAll(),
+	)
 
-    log.Println("Notification Service pronto e in ascolto dello storico...")
+	if err != nil {
+		log.Fatalf("Sub error: %v", err)
+	}
+
+	log.Println("[NOTIFICATION] Pronto, in ascolto di nuovi eventi...")
 }
 
 func (s *NotificationService) sendEmail(e BookingEvent) {
-    // In un sistema reale qui faresti una query al Catalog col ProjectionID 
-    // per ottenere il titolo del film e l'orario
-    log.Printf(" [NOTIFY] Invio conferma: Prenotazione %s - Proiezione %s - Posto %d", 
-        e.BookingID, e.MovieID, e.SeatID)
+	log.Printf("📧 [EMAIL SENT] Conferma per %s: Posto %d prenotato con successo!", e.UserID, e.SeatID)
 }

@@ -16,7 +16,7 @@ RUN apk --no-cache add ca-certificates
 
 WORKDIR /root/
 COPY --from=builder /booking-service .
-COPY ./movies.json .
+COPY movies.json /app/movies.json
 
 # Porta gRPC
 EXPOSE 50051

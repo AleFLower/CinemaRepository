@@ -13,20 +13,18 @@ service BookingService {
 }
 
 message SeatsRequest {
-  string movie_id = 1;
+  string projection_id = 1;
 }
 
 message SeatsResponse {
-  string movie_id = 1;
+  string projection_id = 1;
   map<int32, bool> seats = 2; // ID Posto -> Occupato
 }
 
 message ReserveRequest {
-  string movie_id = 1;
+  string projection_id = 1;
   int32 seat_id = 2;
   string user_id = 3;
-  // Strategy: "manual", "auto_best", "social_distancing"
-  string strategy = 4; 
 }
 
 message ReserveResponse {

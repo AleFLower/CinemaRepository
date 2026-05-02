@@ -5,13 +5,20 @@ services:
 
   nats:
     image: nats:2.10-alpine
-    command: "-js"
+    container_name: nats-broker
+    command: "-js --sd /data" # Abilita JetStream e imposta cartella dati
+    volumes:
+      - nats_data:/data
     ports:
+      - "4222:4222"
       - "8222:8222"
 
-  # 🧠 Redis (stato condiviso)
+
+
+  # Redis (stato condiviso)
   redis:
     image: redis:7-alpine
+    container_name: redis
     ports:
       - "6379:6379"
 
@@ -36,16 +43,26 @@ services:
       dockerfile: movie-catalog/Dockerfile
     environment:
       - PORT=50052
+      - CATALOG_FILE=/app/movies.json
 
-  # 🎟️ Booking Service (SCALABILE)
+  # Booking Service (SCALABILE)
   booking:
     build:
       context: .
       dockerfile: booking/Dockerfile
     environment:
       - PORT=50051
-      - NATS_URL=nats://nats:4222
       - REDIS_ADDR=redis:6379
+      - NATS_URL=nats://nats:4222
+      - CATALOG_FILE=/app/movies.json
+      - REDIS_TIMEOUT=2s
+      - NATS_STREAM=BOOKINGS_STREAM
+      - NATS_SUBJECT_ALL=bookings.>
+      - NATS_SUBJECT_EVENTS=bookings.event.*
+      - NATS_SUBJECT_PREFIX=bookings.event
+      - LOCK_TTL=5s
+      - RESTORE_TIMEOUT=500ms
+      - DEFAULT_STRATEGY=default
     depends_on:
       - nats
       - redis
@@ -54,11 +71,19 @@ services:
     build:
       context: .
       dockerfile: notification/Dockerfile
+    deploy:
+     restart_policy:
+      condition: on-failure
+      delay: 5s
+      max_attempts: 3
     environment:
       - NATS_URL=nats://nats:4222
     depends_on:
       - nats
 
+volumes:
+  nats_data:
+  
 networks:
   default:
     name: cinema-network
