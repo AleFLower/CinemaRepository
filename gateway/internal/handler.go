@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sony/gobreaker"
+	"cinema-reservation/common/utils"
 
 	pb "cinema-reservation/common/proto/pb"
 )
@@ -41,14 +42,14 @@ func NewGatewayHandler(
 }
 
 //
-// GET /movies
+// 🎬 GET /movies
 //
 func (h *GatewayHandler) GetMovies(c *gin.Context) {
 	resp, err := h.catalogClient.GetMovies(context.Background(), &pb.Empty{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Catalog service non disponibile",
-			"details": err.Error(),
+		// Usiamo l'helper per mappare l'errore gRPC
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": utils.MapGRPCErrorToUser(err),
 		})
 		return
 	}
@@ -56,7 +57,7 @@ func (h *GatewayHandler) GetMovies(c *gin.Context) {
 }
 
 //
-// GET /seats/:id
+// 💺 GET /seats/:id
 //
 func (h *GatewayHandler) GetSeats(c *gin.Context) {
 	projectionID := c.Param("id")
@@ -68,13 +69,12 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Booking service non disponibile",
-			"details": err.Error(),
+			"error": utils.MapGRPCErrorToUser(err),
 		})
 		return
 	}
 
-	//  Ordiniamo i posti
+	// 🔽 Ordiniamo i posti
 	keys := make([]int, 0, len(resp.Seats))
 	for k := range resp.Seats {
 		keys = append(keys, int(k))
@@ -91,12 +91,12 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"projection_id": resp.ProjectionId,
-		"seats":    seats,
+		"seats":         seats,
 	})
 }
 
 //
-// POST /book
+// 🎟️ POST /book
 //
 func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 	var req struct {
@@ -107,8 +107,7 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Dati non validi",
-			"details": err.Error(),
+			"error": "I dati inviati non sono validi.",
 		})
 		return
 	}
@@ -117,27 +116,37 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 		return h.bookingClient.ReserveSeat(
 			context.Background(),
 			&pb.ReserveRequest{
-				ProjectionId:  req.ProjectionID,
-				SeatId:   req.SeatID,
-				UserId:   req.UserID,
+				ProjectionId: req.ProjectionID,
+				SeatId:       req.SeatID,
+				UserId:       req.UserID,
 			},
 		)
 	})
 
 	if err != nil {
+		// Gestione specifica Circuit Breaker
 		if err == gobreaker.ErrOpenState {
 			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"error": "Servizio booking temporaneamente non disponibile (circuit breaker aperto)",
+				"error": "Il sistema di prenotazione è temporaneamente sovraccarico. Riprova tra pochi secondi.",
 			})
 			return
 		}
 
+		// Altri errori gRPC mappati
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
+			"error": utils.MapGRPCErrorToUser(err),
 		})
 		return
 	}
 
-	c.JSON(http.StatusOK, result)
-}
+	// Gestione esito prenotazione (Success true/false)
+	res := result.(*pb.ReserveResponse)
+	if !res.Success {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": res.Message, // Es: "Posto già occupato"
+		})
+		return
+	}
 
+	c.JSON(http.StatusOK, res)
+}
