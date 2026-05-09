@@ -11,6 +11,6 @@ func SeatStrategyFactory(strategyName string) (SeatStrategy, error) {
 	case "default", "":
 		return &DefaultStrategy{}, nil
 	default:
-		return nil, fmt.Errorf("strategia sconosciuta: %s", strategyName)
+		return nil, fmt.Errorf("unknown strategy: %s", strategyName)
 	}
 }

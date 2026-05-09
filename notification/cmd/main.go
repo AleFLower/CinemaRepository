@@ -13,21 +13,21 @@ import (
 )
 
 func main() {
-	// 1. Connessione a NATS
+	// 1. Connect to NATS
 	natsURL := utils.GetEnv("NATS_URL", nats.DefaultURL)
 
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
-		log.Fatalf("Impossibile connettersi a NATS: %v", err)
+		log.Fatalf("Unable to connect to NATS: %v", err)
 	}
 	defer nc.Close()
 
-	// 2. Avvio del servizio
+	// 2. Start service
 	service := internal.NewNotificationService(nc)
 	service.Start()
 
 	// 3. Keep-alive
-	log.Println("Notification Service avviato correttamente.")
+	log.Println("Notification Service started successfully.")
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

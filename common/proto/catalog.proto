@@ -7,6 +7,9 @@ option go_package = "cinema-reservation/common/proto/pb";
 service CatalogService {
   rpc GetMovies(Empty) returns (MovieList);
   rpc GetMovie(MovieRequest) returns (Movie);
+  rpc GetProjections(Empty) returns (ProjectionList);
+  rpc GetProjectionsByMovie(MovieRequest) returns (ProjectionList);
+  rpc GetProjection(ProjectionRequest) returns (Projection);
 }
 
 message Empty {}
@@ -18,8 +21,23 @@ message MovieRequest {
 message Movie {
   string id = 1;
   string title = 2;
+  string category = 3;
+}
+
+message Projection {
+  string id = 1;
+  string movie_id = 2;
   string show_time = 3;
-  int32 total_seats = 4;
+  string room_id = 4;      
+  int32 total_seats = 5;
+}
+
+message ProjectionList {
+  repeated Projection projections = 1;
+}
+
+message ProjectionRequest {
+  string id = 1;
 }
 
 message MovieList {

@@ -105,8 +105,7 @@ type Movie struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	ShowTime      string                 `protobuf:"bytes,3,opt,name=show_time,json=showTime,proto3" json:"show_time,omitempty"`
-	TotalSeats    int32                  `protobuf:"varint,4,opt,name=total_seats,json=totalSeats,proto3" json:"total_seats,omitempty"`
+	Category      string                 `protobuf:"bytes,3,opt,name=category,proto3" json:"category,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -155,18 +154,175 @@ func (x *Movie) GetTitle() string {
 	return ""
 }
 
-func (x *Movie) GetShowTime() string {
+func (x *Movie) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+type Projection struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	MovieId       string                 `protobuf:"bytes,2,opt,name=movie_id,json=movieId,proto3" json:"movie_id,omitempty"`
+	ShowTime      string                 `protobuf:"bytes,3,opt,name=show_time,json=showTime,proto3" json:"show_time,omitempty"`
+	RoomId        string                 `protobuf:"bytes,4,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	TotalSeats    int32                  `protobuf:"varint,5,opt,name=total_seats,json=totalSeats,proto3" json:"total_seats,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Projection) Reset() {
+	*x = Projection{}
+	mi := &file_common_proto_catalog_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Projection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Projection) ProtoMessage() {}
+
+func (x *Projection) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_catalog_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Projection.ProtoReflect.Descriptor instead.
+func (*Projection) Descriptor() ([]byte, []int) {
+	return file_common_proto_catalog_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *Projection) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Projection) GetMovieId() string {
+	if x != nil {
+		return x.MovieId
+	}
+	return ""
+}
+
+func (x *Projection) GetShowTime() string {
 	if x != nil {
 		return x.ShowTime
 	}
 	return ""
 }
 
-func (x *Movie) GetTotalSeats() int32 {
+func (x *Projection) GetRoomId() string {
+	if x != nil {
+		return x.RoomId
+	}
+	return ""
+}
+
+func (x *Projection) GetTotalSeats() int32 {
 	if x != nil {
 		return x.TotalSeats
 	}
 	return 0
+}
+
+type ProjectionList struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Projections   []*Projection          `protobuf:"bytes,1,rep,name=projections,proto3" json:"projections,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProjectionList) Reset() {
+	*x = ProjectionList{}
+	mi := &file_common_proto_catalog_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectionList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectionList) ProtoMessage() {}
+
+func (x *ProjectionList) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_catalog_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectionList.ProtoReflect.Descriptor instead.
+func (*ProjectionList) Descriptor() ([]byte, []int) {
+	return file_common_proto_catalog_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ProjectionList) GetProjections() []*Projection {
+	if x != nil {
+		return x.Projections
+	}
+	return nil
+}
+
+type ProjectionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ProjectionRequest) Reset() {
+	*x = ProjectionRequest{}
+	mi := &file_common_proto_catalog_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ProjectionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProjectionRequest) ProtoMessage() {}
+
+func (x *ProjectionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_common_proto_catalog_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProjectionRequest.ProtoReflect.Descriptor instead.
+func (*ProjectionRequest) Descriptor() ([]byte, []int) {
+	return file_common_proto_catalog_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ProjectionRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
 }
 
 type MovieList struct {
@@ -178,7 +334,7 @@ type MovieList struct {
 
 func (x *MovieList) Reset() {
 	*x = MovieList{}
-	mi := &file_common_proto_catalog_proto_msgTypes[3]
+	mi := &file_common_proto_catalog_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -190,7 +346,7 @@ func (x *MovieList) String() string {
 func (*MovieList) ProtoMessage() {}
 
 func (x *MovieList) ProtoReflect() protoreflect.Message {
-	mi := &file_common_proto_catalog_proto_msgTypes[3]
+	mi := &file_common_proto_catalog_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -203,7 +359,7 @@ func (x *MovieList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MovieList.ProtoReflect.Descriptor instead.
 func (*MovieList) Descriptor() ([]byte, []int) {
-	return file_common_proto_catalog_proto_rawDescGZIP(), []int{3}
+	return file_common_proto_catalog_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *MovieList) GetMovies() []*Movie {
@@ -220,18 +376,31 @@ const file_common_proto_catalog_proto_rawDesc = "" +
 	"\x1acommon/proto/catalog.proto\x12\acatalog\"\a\n" +
 	"\x05Empty\"\x1e\n" +
 	"\fMovieRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"k\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"I\n" +
 	"\x05Movie\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1b\n" +
-	"\tshow_time\x18\x03 \x01(\tR\bshowTime\x12\x1f\n" +
-	"\vtotal_seats\x18\x04 \x01(\x05R\n" +
-	"totalSeats\"3\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x1a\n" +
+	"\bcategory\x18\x03 \x01(\tR\bcategory\"\x8e\x01\n" +
+	"\n" +
+	"Projection\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\bmovie_id\x18\x02 \x01(\tR\amovieId\x12\x1b\n" +
+	"\tshow_time\x18\x03 \x01(\tR\bshowTime\x12\x17\n" +
+	"\aroom_id\x18\x04 \x01(\tR\x06roomId\x12\x1f\n" +
+	"\vtotal_seats\x18\x05 \x01(\x05R\n" +
+	"totalSeats\"G\n" +
+	"\x0eProjectionList\x125\n" +
+	"\vprojections\x18\x01 \x03(\v2\x13.catalog.ProjectionR\vprojections\"#\n" +
+	"\x11ProjectionRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"3\n" +
 	"\tMovieList\x12&\n" +
-	"\x06movies\x18\x01 \x03(\v2\x0e.catalog.MovieR\x06movies2t\n" +
+	"\x06movies\x18\x01 \x03(\v2\x0e.catalog.MovieR\x06movies2\xba\x02\n" +
 	"\x0eCatalogService\x12/\n" +
 	"\tGetMovies\x12\x0e.catalog.Empty\x1a\x12.catalog.MovieList\x121\n" +
-	"\bGetMovie\x12\x15.catalog.MovieRequest\x1a\x0e.catalog.MovieB$Z\"cinema-reservation/common/proto/pbb\x06proto3"
+	"\bGetMovie\x12\x15.catalog.MovieRequest\x1a\x0e.catalog.Movie\x129\n" +
+	"\x0eGetProjections\x12\x0e.catalog.Empty\x1a\x17.catalog.ProjectionList\x12G\n" +
+	"\x15GetProjectionsByMovie\x12\x15.catalog.MovieRequest\x1a\x17.catalog.ProjectionList\x12@\n" +
+	"\rGetProjection\x12\x1a.catalog.ProjectionRequest\x1a\x13.catalog.ProjectionB$Z\"cinema-reservation/common/proto/pbb\x06proto3"
 
 var (
 	file_common_proto_catalog_proto_rawDescOnce sync.Once
@@ -245,24 +414,34 @@ func file_common_proto_catalog_proto_rawDescGZIP() []byte {
 	return file_common_proto_catalog_proto_rawDescData
 }
 
-var file_common_proto_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_common_proto_catalog_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_common_proto_catalog_proto_goTypes = []any{
-	(*Empty)(nil),        // 0: catalog.Empty
-	(*MovieRequest)(nil), // 1: catalog.MovieRequest
-	(*Movie)(nil),        // 2: catalog.Movie
-	(*MovieList)(nil),    // 3: catalog.MovieList
+	(*Empty)(nil),             // 0: catalog.Empty
+	(*MovieRequest)(nil),      // 1: catalog.MovieRequest
+	(*Movie)(nil),             // 2: catalog.Movie
+	(*Projection)(nil),        // 3: catalog.Projection
+	(*ProjectionList)(nil),    // 4: catalog.ProjectionList
+	(*ProjectionRequest)(nil), // 5: catalog.ProjectionRequest
+	(*MovieList)(nil),         // 6: catalog.MovieList
 }
 var file_common_proto_catalog_proto_depIdxs = []int32{
-	2, // 0: catalog.MovieList.movies:type_name -> catalog.Movie
-	0, // 1: catalog.CatalogService.GetMovies:input_type -> catalog.Empty
-	1, // 2: catalog.CatalogService.GetMovie:input_type -> catalog.MovieRequest
-	3, // 3: catalog.CatalogService.GetMovies:output_type -> catalog.MovieList
-	2, // 4: catalog.CatalogService.GetMovie:output_type -> catalog.Movie
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	3, // 0: catalog.ProjectionList.projections:type_name -> catalog.Projection
+	2, // 1: catalog.MovieList.movies:type_name -> catalog.Movie
+	0, // 2: catalog.CatalogService.GetMovies:input_type -> catalog.Empty
+	1, // 3: catalog.CatalogService.GetMovie:input_type -> catalog.MovieRequest
+	0, // 4: catalog.CatalogService.GetProjections:input_type -> catalog.Empty
+	1, // 5: catalog.CatalogService.GetProjectionsByMovie:input_type -> catalog.MovieRequest
+	5, // 6: catalog.CatalogService.GetProjection:input_type -> catalog.ProjectionRequest
+	6, // 7: catalog.CatalogService.GetMovies:output_type -> catalog.MovieList
+	2, // 8: catalog.CatalogService.GetMovie:output_type -> catalog.Movie
+	4, // 9: catalog.CatalogService.GetProjections:output_type -> catalog.ProjectionList
+	4, // 10: catalog.CatalogService.GetProjectionsByMovie:output_type -> catalog.ProjectionList
+	3, // 11: catalog.CatalogService.GetProjection:output_type -> catalog.Projection
+	7, // [7:12] is the sub-list for method output_type
+	2, // [2:7] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_common_proto_catalog_proto_init() }
@@ -276,7 +455,7 @@ func file_common_proto_catalog_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_proto_catalog_proto_rawDesc), len(file_common_proto_catalog_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

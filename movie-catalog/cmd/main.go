@@ -13,15 +13,15 @@ import (
 )
 
 func main() {
-	// Porta configurabile (fallback default)
+	// Configurable port (default fallback)
 	port := utils.GetEnv("PORT", "50052")
 
-	// Path file configurabile
+	// Configurable file path
 	catalogPath := utils.GetEnv("CATALOG_FILE", "movies.json")
 
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
-		log.Fatalf("Errore apertura porta %s: %v", port, err)
+		log.Fatalf("Error opening port %s: %v", port, err)
 	}
 
 	s := grpc.NewServer()
@@ -30,9 +30,9 @@ func main() {
 
 	reflection.Register(s)
 
-	log.Printf("Movie Catalog Service in ascolto su :%s", port)
+	log.Printf("Movie Catalog Service listening on :%s", port)
 
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("Errore avvio server: %v", err)
+		log.Fatalf("Server startup error: %v", err)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 	"time"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sony/gobreaker"
@@ -14,14 +15,16 @@ import (
 )
 
 type GatewayHandler struct {
-	catalogClient pb.CatalogServiceClient
-	bookingClient pb.BookingServiceClient
-	cb            *gobreaker.CircuitBreaker
+	catalogClient        pb.CatalogServiceClient
+	bookingClient        pb.BookingServiceClient
+	cb                   *gobreaker.CircuitBreaker
+	recommendationClient pb.RecommendationServiceClient
 }
 
 func NewGatewayHandler(
 	catClient pb.CatalogServiceClient,
 	bookClient pb.BookingServiceClient,
+	recClient pb.RecommendationServiceClient,
 ) *GatewayHandler {
 
 	settings := gobreaker.Settings{
@@ -35,9 +38,10 @@ func NewGatewayHandler(
 	}
 
 	return &GatewayHandler{
-		catalogClient: catClient,
-		bookingClient: bookClient,
-		cb:            gobreaker.NewCircuitBreaker(settings),
+		catalogClient:        catClient,
+		bookingClient:        bookClient,
+		recommendationClient: recClient,
+		cb:                   gobreaker.NewCircuitBreaker(settings),
 	}
 }
 
@@ -47,7 +51,6 @@ func NewGatewayHandler(
 func (h *GatewayHandler) GetMovies(c *gin.Context) {
 	resp, err := h.catalogClient.GetMovies(context.Background(), &pb.Empty{})
 	if err != nil {
-		// Usiamo l'helper per mappare l'errore gRPC
 		c.JSON(http.StatusServiceUnavailable, gin.H{
 			"error": utils.MapGRPCErrorToUser(err),
 		})
@@ -74,7 +77,7 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 		return
 	}
 
-	// 🔽 Ordiniamo i posti
+	// Sort seats
 	keys := make([]int, 0, len(resp.Seats))
 	for k := range resp.Seats {
 		keys = append(keys, int(k))
@@ -107,12 +110,13 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "I dati inviati non sono validi.",
+			"error": "The provided data is not valid.",
 		})
 		return
 	}
 
 	result, err := h.cb.Execute(func() (interface{}, error) {
+
 		return h.bookingClient.ReserveSeat(
 			context.Background(),
 			&pb.ReserveRequest{
@@ -124,29 +128,69 @@ func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 	})
 
 	if err != nil {
-		// Gestione specifica Circuit Breaker
+		// Circuit Breaker handling
 		if err == gobreaker.ErrOpenState {
+			log.Println("retry")
 			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"error": "Il sistema di prenotazione è temporaneamente sovraccarico. Riprova tra pochi secondi.",
+				"error": "The booking system is temporarily overloaded. Please try again in a few seconds.",
 			})
 			return
 		}
 
-		// Altri errori gRPC mappati
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": utils.MapGRPCErrorToUser(err),
 		})
 		return
 	}
 
-	// Gestione esito prenotazione (Success true/false)
 	res := result.(*pb.ReserveResponse)
 	if !res.Success {
 		c.JSON(http.StatusConflict, gin.H{
-			"error": res.Message, // Es: "Posto già occupato"
+			"error": res.Message,
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *GatewayHandler) GetRecommendations(c *gin.Context) {
+	userID := c.Query("user_id")
+
+	resp, err := h.recommendationClient.GetRecommendations(
+		context.Background(),
+		&pb.RecommendationRequest{UserId: userID},
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "recommendation error"})
+		return
+	}
+
+	c.JSON(200, resp)
+}
+
+func (h *GatewayHandler) GetProjections(c *gin.Context) {
+	resp, err := h.catalogClient.GetProjections(context.Background(), &pb.Empty{})
+	if err != nil {
+		c.JSON(500, gin.H{"error": "catalog error"})
+		return
+	}
+	c.JSON(200, resp)
+}
+
+func (h *GatewayHandler) GetProjectionsByMovie(c *gin.Context) {
+	movieID := c.Param("id")
+
+	resp, err := h.catalogClient.GetProjectionsByMovie(
+		context.Background(),
+		&pb.MovieRequest{Id: movieID},
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{"error": "catalog error"})
+		return
+	}
+
+	c.JSON(200, resp)
 }

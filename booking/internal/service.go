@@ -12,22 +12,21 @@ import (
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"github.com/redis/go-redis/v9"
-	
 
 	pb "cinema-reservation/common/proto/pb"
 	"cinema-reservation/common/utils"
 )
 
 type BookingEvent struct {
-	BookingID string `json:"booking_id"`
-	UserID    string `json:"user_id"`
-	ProjectionID   string `json:"projection_id"`
-	SeatID    int32  `json:"seat_id"`
+	BookingID    string `json:"booking_id"`
+	UserID       string `json:"user_id"`
+	ProjectionID string `json:"projection_id"`
+	SeatID       int32  `json:"seat_id"`
 }
 
 type RoomState struct {
-	Mu    sync.Mutex
-	Seats map[int32]bool
+	Mu       sync.Mutex
+	Seats    map[int32]bool
 	Strategy string
 }
 
@@ -63,43 +62,45 @@ func NewBookingService(nc *nats.Conn, rdb *redis.Client, configPath string) *Boo
 		Storage:  nats.FileStorage,
 	})
 	if err != nil {
-		log.Printf("Stream già esistente: %v", err)
+		log.Printf("Stream already exists: %v", err)
 	}
 
 	file, err := os.ReadFile(configPath)
 	if err != nil {
-		log.Fatalf("Errore lettura config: %v", err)
+		log.Fatalf("Config read error: %v", err)
 	}
 
-	var config []struct {
-		ID         string `json:"id"`
-		TotalSeats int    `json:"total_seats"`
-		Strategy   string `json:"strategy"`
+	var data struct {
+		Projections []struct {
+			ID         string `json:"id"`
+			TotalSeats int    `json:"total_seats"`
+			Strategy   string `json:"strategy"`
+		} `json:"projections"`
 	}
 
-	if err := json.Unmarshal(file, &config); err != nil {
-		log.Fatalf("Errore parsing config: %v", err)
+	if err := json.Unmarshal(file, &data); err != nil {
+		log.Fatalf("Config parsing error: %v", err)
 	}
 
 	projections := make(map[string]*RoomState)
 
-	for _, p := range config {
-	seats := make(map[int32]bool)
+	for _, p := range data.Projections {
+		seats := make(map[int32]bool)
 
-	for i := int32(1); i <= int32(p.TotalSeats); i++ {
-		seats[i] = false
-	}
+		for i := int32(1); i <= int32(p.TotalSeats); i++ {
+			seats[i] = false
+		}
 
-	strategy := p.Strategy
-	if strategy == "" {
-		strategy = utils.GetEnv("DEFAULT_STRATEGY", "default")
-	}
+		strategy := p.Strategy
+		if strategy == "" {
+			strategy = utils.GetEnv("DEFAULT_STRATEGY", "default")
+		}
 
-	projections[p.ID] = &RoomState{
-		Seats:    seats,
-		Strategy: strategy,
+		projections[p.ID] = &RoomState{
+			Seats:    seats,
+			Strategy: strategy,
+		}
 	}
-}
 
 	s := &BookingService{
 		projections: projections,
@@ -122,7 +123,7 @@ func (s *BookingService) restoreState(subject string) {
 		return
 	}
 
-	log.Println("[EVENT SOURCING] restore state...")
+	log.Println("[EVENT SOURCING] restoring state...")
 
 	for {
 		msg, err := sub.NextMsg(timeout)
@@ -175,19 +176,19 @@ func (s *BookingService) releaseLock(ctx context.Context, key, token string) {
 
 func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest) (*pb.ReserveResponse, error) {
 
-	log.Printf("Prova")
+	log.Printf("Test")
 
 	room, err := s.getRoom(req.ProjectionId)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if _, exists := room.Seats[req.SeatId]; !exists {
-          return &pb.ReserveResponse{
-          Success: false,
-          Message: "posto non esistente",
-            }, nil
-        }
+		return &pb.ReserveResponse{
+			Success: false,
+			Message: "seat does not exist",
+		}, nil
+	}
 
 	lockKey := fmt.Sprintf("lock:seat:%s:%d", req.ProjectionId, req.SeatId)
 
@@ -199,7 +200,7 @@ func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest
 	if !ok {
 		return &pb.ReserveResponse{
 			Success: false,
-			Message: "posto in fase di prenotazione, riprova",
+			Message: "seat is being reserved, try again",
 		}, nil
 	}
 
@@ -220,15 +221,15 @@ func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest
 	if room.Seats[req.SeatId] {
 		return &pb.ReserveResponse{
 			Success: false,
-			Message: "posto già occupato",
+			Message: "seat already taken",
 		}, nil
 	}
 
 	event := BookingEvent{
-		BookingID: fmt.Sprintf("RES-%s-%d", req.ProjectionId, req.SeatId),
-		UserID:    req.UserId,
-		ProjectionID:   req.ProjectionId,
-		SeatID:    req.SeatId,
+		BookingID:    fmt.Sprintf("RES-%s-%d", req.ProjectionId, req.SeatId),
+		UserID:       req.UserId,
+		ProjectionID: req.ProjectionId,
+		SeatID:       req.SeatId,
 	}
 
 	data, _ := json.Marshal(event)
@@ -238,14 +239,16 @@ func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest
 
 	_, err = s.js.Publish(subject, data)
 	if err != nil {
-		return nil, fmt.Errorf("errore publish event: %v", err)
+	        log.Printf("❌ [PUB ERROR] Errore invio su NATS: %v", err)
+		return nil, fmt.Errorf("event publish error: %v", err)
 	}
+	log.Printf("✅ [EVENT PUBLISHED] Subject: %s | Data: %s", subject, string(data)) // AGGIUNGI QUESTO
 
 	room.Seats[req.SeatId] = true
 
 	return &pb.ReserveResponse{
 		Success:   true,
-		Message:   "Prenotazione confermata",
+		Message:   "Booking confirmed",
 		BookingId: event.BookingID,
 	}, nil
 }
@@ -266,7 +269,7 @@ func (s *BookingService) GetSeats(ctx context.Context, req *pb.SeatsRequest) (*p
 
 	return &pb.SeatsResponse{
 		ProjectionId: req.ProjectionId,
-		Seats:   copySeats,
+		Seats:        copySeats,
 	}, nil
 }
 
@@ -274,5 +277,5 @@ func (s *BookingService) getRoom(id string) (*RoomState, error) {
 	if r, ok := s.projections[id]; ok {
 		return r, nil
 	}
-	return nil, fmt.Errorf("proiezione non trovata")
+	return nil, fmt.Errorf("projection not found")
 }

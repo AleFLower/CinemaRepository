@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package recommendation;
+
+option go_package = "cinema-reservation/common/proto/pb";
+
+import "common/proto/catalog.proto";
+
+service RecommendationService {
+  rpc GetRecommendations(RecommendationRequest) returns (RecommendationResponse);
+}
+
+message RecommendationRequest {
+  string user_id = 1;
+}
+
+message RecommendationResponse {
+  repeated catalog.Movie movies = 1;
+}

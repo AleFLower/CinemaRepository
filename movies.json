@@ -1,23 +1,37 @@
-[
-  { 
-    "id": "p101", 
-    "title": "Dune: Part Two", 
-    "show_time": "20:30", 
-    "room_id": "SALA_IMAX",
-    "total_seats": 50 
-  },
-  { 
-    "id": "p102", 
-    "title": "Dune: Part Two", 
-    "show_time": "22:45", 
-    "room_id": "SALA_4",
-    "total_seats": 30 
-  },
-  { 
-    "id": "p201", 
-    "title": "Oppenheimer", 
-    "show_time": "21:00", 
-    "room_id": "SALA_2",
-    "total_seats": 50 
-  }
-]
+{
+  "movies": [
+    {
+      "id": "m1",
+      "title": "Dune: Part Two",
+      "category": "fantasy"
+    },
+    {
+      "id": "m2",
+      "title": "Oppenheimer",
+      "category": "history"
+    }
+  ],
+  "projections": [
+    {
+      "id": "p101",
+      "movie_id": "m1",
+      "show_time": "20:30",
+      "room_id": "SALA_IMAX",
+      "total_seats": 50
+    },
+    {
+      "id": "p102",
+      "movie_id": "m1",
+      "show_time": "22:45",
+      "room_id": "SALA_4",
+      "total_seats": 30
+    },
+    {
+      "id": "p201",
+      "movie_id": "m2",
+      "show_time": "21:00",
+      "room_id": "SALA_2",
+      "total_seats": 50
+    }
+  ]
+}

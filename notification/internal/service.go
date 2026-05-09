@@ -10,7 +10,7 @@ import (
 type BookingEvent struct {
 	BookingID string `json:"booking_id"`
 	UserID    string `json:"user_id"`
-	MovieID   string `json:"movie_id"`
+	ProjectionID   string `json:"projection_id"`
 	SeatID    int32  `json:"seat_id"`
 }
 
@@ -28,30 +28,34 @@ func (s *NotificationService) Start() {
 		log.Fatalf("JetStream error: %v", err)
 	}
 
-	// Sottoscrizione Queue (bilanciata se scali il servizio notifiche)
-	// Ascolta lo stesso subject del booking: bookings.event.*
+	// Queue subscription (load-balanced if you scale notification service)
+	// Listens to booking event subject: bookings.event.*
 	_, err = js.QueueSubscribe("bookings.event.*", "notification_group", func(m *nats.Msg) {
 		var event BookingEvent
 		if err := json.Unmarshal(m.Data, &event); err != nil {
-			m.Ack() // Ignora messaggi malformati
+		       log.Printf("Error: %s", err)
+			m.Ack() // Ignore malformed messages
 			return
 		}
 
 		s.sendEmail(event)
-		m.Ack() // Conferma ricezione
-	}, 
-	nats.Durable("notification-worker"), 
-	nats.ManualAck(),
-	nats.DeliverAll(),
+		errAck := m.Ack()
+    if errAck != nil {
+        log.Printf("❌ [ACK ERROR] %v", errAck)
+    }
+	},
+		nats.Durable("notification-worker"),
+		nats.ManualAck(),
+		nats.DeliverAll(),
 	)
 
 	if err != nil {
-		log.Fatalf("Sub error: %v", err)
+		log.Fatalf("Subscription error: %v", err)
 	}
 
-	log.Println("[NOTIFICATION] Pronto, in ascolto di nuovi eventi...")
+	log.Println("[NOTIFICATION] Ready, listening for new events...")
 }
 
 func (s *NotificationService) sendEmail(e BookingEvent) {
-	log.Printf("📧 [EMAIL SENT] Conferma per %s: Posto %d prenotato con successo!", e.UserID, e.SeatID)
+	log.Printf("📧 [EMAIL SENT] Confirmation for %s: Seat %d successfully booked!", e.UserID, e.SeatID)
 }

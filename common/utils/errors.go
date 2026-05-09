@@ -5,7 +5,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// MapGRPCErrorToUser traduce gli errori tecnici gRPC in messaggi comprensibili
+// MapGRPCErrorToUser translates technical gRPC errors into user-friendly messages
 func MapGRPCErrorToUser(err error) string {
 	if err == nil {
 		return ""
@@ -15,17 +15,17 @@ func MapGRPCErrorToUser(err error) string {
 	if ok {
 		switch st.Code() {
 		case codes.Unavailable:
-			return "Il servizio è momentaneamente non raggiungibile. Riprova tra poco."
+			return "The service is temporarily unavailable. Please try again later."
 		case codes.DeadlineExceeded:
-			return "La richiesta ha impiegato troppo tempo. Controlla la tua connessione."
+			return "The request took too long. Please check your connection."
 		case codes.NotFound:
-			return "L'elemento richiesto non è stato trovato."
+			return "The requested item was not found."
 		case codes.Unimplemented:
-			return "Funzionalità non ancora disponibile."
+			return "Feature not yet available."
 		}
-		// Ritorna il messaggio d'errore inviato dal server (es. "Posto occupato")
+		// Return server-provided error message (e.g. "Seat already taken")
 		return st.Message()
 	}
 
-	return "Si è verificato un errore imprevisto. I nostri tecnici sono al lavoro."
+	return "An unexpected error occurred. Our engineers are working on it."
 }

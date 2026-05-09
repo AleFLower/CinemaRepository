@@ -19,8 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	CatalogService_GetMovies_FullMethodName = "/catalog.CatalogService/GetMovies"
-	CatalogService_GetMovie_FullMethodName  = "/catalog.CatalogService/GetMovie"
+	CatalogService_GetMovies_FullMethodName             = "/catalog.CatalogService/GetMovies"
+	CatalogService_GetMovie_FullMethodName              = "/catalog.CatalogService/GetMovie"
+	CatalogService_GetProjections_FullMethodName        = "/catalog.CatalogService/GetProjections"
+	CatalogService_GetProjectionsByMovie_FullMethodName = "/catalog.CatalogService/GetProjectionsByMovie"
+	CatalogService_GetProjection_FullMethodName         = "/catalog.CatalogService/GetProjection"
 )
 
 // CatalogServiceClient is the client API for CatalogService service.
@@ -29,6 +32,9 @@ const (
 type CatalogServiceClient interface {
 	GetMovies(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*MovieList, error)
 	GetMovie(ctx context.Context, in *MovieRequest, opts ...grpc.CallOption) (*Movie, error)
+	GetProjections(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ProjectionList, error)
+	GetProjectionsByMovie(ctx context.Context, in *MovieRequest, opts ...grpc.CallOption) (*ProjectionList, error)
+	GetProjection(ctx context.Context, in *ProjectionRequest, opts ...grpc.CallOption) (*Projection, error)
 }
 
 type catalogServiceClient struct {
@@ -59,12 +65,45 @@ func (c *catalogServiceClient) GetMovie(ctx context.Context, in *MovieRequest, o
 	return out, nil
 }
 
+func (c *catalogServiceClient) GetProjections(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ProjectionList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProjectionList)
+	err := c.cc.Invoke(ctx, CatalogService_GetProjections_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetProjectionsByMovie(ctx context.Context, in *MovieRequest, opts ...grpc.CallOption) (*ProjectionList, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ProjectionList)
+	err := c.cc.Invoke(ctx, CatalogService_GetProjectionsByMovie_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *catalogServiceClient) GetProjection(ctx context.Context, in *ProjectionRequest, opts ...grpc.CallOption) (*Projection, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Projection)
+	err := c.cc.Invoke(ctx, CatalogService_GetProjection_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CatalogServiceServer is the server API for CatalogService service.
 // All implementations must embed UnimplementedCatalogServiceServer
 // for forward compatibility.
 type CatalogServiceServer interface {
 	GetMovies(context.Context, *Empty) (*MovieList, error)
 	GetMovie(context.Context, *MovieRequest) (*Movie, error)
+	GetProjections(context.Context, *Empty) (*ProjectionList, error)
+	GetProjectionsByMovie(context.Context, *MovieRequest) (*ProjectionList, error)
+	GetProjection(context.Context, *ProjectionRequest) (*Projection, error)
 	mustEmbedUnimplementedCatalogServiceServer()
 }
 
@@ -80,6 +119,15 @@ func (UnimplementedCatalogServiceServer) GetMovies(context.Context, *Empty) (*Mo
 }
 func (UnimplementedCatalogServiceServer) GetMovie(context.Context, *MovieRequest) (*Movie, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetMovie not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetProjections(context.Context, *Empty) (*ProjectionList, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProjections not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetProjectionsByMovie(context.Context, *MovieRequest) (*ProjectionList, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProjectionsByMovie not implemented")
+}
+func (UnimplementedCatalogServiceServer) GetProjection(context.Context, *ProjectionRequest) (*Projection, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetProjection not implemented")
 }
 func (UnimplementedCatalogServiceServer) mustEmbedUnimplementedCatalogServiceServer() {}
 func (UnimplementedCatalogServiceServer) testEmbeddedByValue()                        {}
@@ -138,6 +186,60 @@ func _CatalogService_GetMovie_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CatalogService_GetProjections_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetProjections(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetProjections_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetProjections(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetProjectionsByMovie_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MovieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetProjectionsByMovie(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetProjectionsByMovie_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetProjectionsByMovie(ctx, req.(*MovieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CatalogService_GetProjection_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProjectionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CatalogServiceServer).GetProjection(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CatalogService_GetProjection_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CatalogServiceServer).GetProjection(ctx, req.(*ProjectionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CatalogService_ServiceDesc is the grpc.ServiceDesc for CatalogService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -152,6 +254,18 @@ var CatalogService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetMovie",
 			Handler:    _CatalogService_GetMovie_Handler,
+		},
+		{
+			MethodName: "GetProjections",
+			Handler:    _CatalogService_GetProjections_Handler,
+		},
+		{
+			MethodName: "GetProjectionsByMovie",
+			Handler:    _CatalogService_GetProjectionsByMovie_Handler,
+		},
+		{
+			MethodName: "GetProjection",
+			Handler:    _CatalogService_GetProjection_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

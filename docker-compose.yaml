@@ -33,6 +33,7 @@ services:
     environment:
       - CATALOG_SERVICE_ADDR=catalog-service:50052
       - BOOKING_SERVICE_ADDR=booking:50051
+      - RECOMMENDATION_SERVICE_ADDR=recommendation-service:50053
     depends_on:
       - catalog-service
       - booking
@@ -80,6 +81,19 @@ services:
       - NATS_URL=nats://nats:4222
     depends_on:
       - nats
+      
+  recommendation-service:
+   build:
+    context: .
+    dockerfile: recommendation/Dockerfile
+   environment:
+    - NATS_URL=nats://nats:4222
+    - REDIS_ADDR=redis:6379
+    - CATALOG_SERVICE_ADDR=catalog-service:50052
+   depends_on:
+    - nats
+    - redis
+    - catalog-service
 
 volumes:
   nats_data:

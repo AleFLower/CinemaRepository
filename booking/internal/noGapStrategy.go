@@ -6,12 +6,12 @@ type NoGapStrategy struct{}
 
 func (s *NoGapStrategy) Validate(room *RoomState, seat int32) error {
 	if room.Seats[seat] {
-		return errors.New("posto già occupato")
+		return errors.New("seat already taken")
 	}
 
 	maxSeat := int32(len(room.Seats))
 
-	// SINISTRA
+	// LEFT SIDE
 	if seat > 1 {
 		leftFree := !room.Seats[seat-1]
 
@@ -21,11 +21,11 @@ func (s *NoGapStrategy) Validate(room *RoomState, seat int32) error {
 		}
 
 		if leftFree && leftLeftOccupied {
-			return errors.New("lasceresti un posto isolato a sinistra")
+			return errors.New("you would leave an isolated seat on the left")
 		}
 	}
 
-	// DESTRA
+	// RIGHT SIDE
 	if seat < maxSeat {
 		rightFree := !room.Seats[seat+1]
 
@@ -35,7 +35,7 @@ func (s *NoGapStrategy) Validate(room *RoomState, seat int32) error {
 		}
 
 		if rightFree && rightRightOccupied {
-			return errors.New("lasceresti un posto isolato a destra")
+			return errors.New("you would leave an isolated seat on the right")
 		}
 	}
 
