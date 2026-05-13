@@ -18,17 +18,13 @@ import (
 
 func main() {
 
-	// ==============================
-	// 📌 CONFIG
-	// ==============================
+	
 	port := utils.GetEnv("PORT", "50053")
 	natsURL := utils.GetEnv("NATS_URL", "nats://localhost:4222")
 	redisAddr := utils.GetEnv("REDIS_ADDR", "localhost:6379")
 	catalogAddr := utils.GetEnv("CATALOG_SERVICE_ADDR", "localhost:50052")
 
-	// ==============================
-	// 🔌 NATS
-	// ==============================
+
 	nc, err := nats.Connect(natsURL)
 	if err != nil {
 		log.Fatalf("NATS connection error: %v", err)
@@ -37,9 +33,7 @@ func main() {
 
 	log.Println("[NATS] connected")
 
-	// ==============================
-	// 🔴 REDIS
-	// ==============================
+	
 	rdb := redis.NewClient(&redis.Options{
 		Addr: redisAddr,
 	})
@@ -52,9 +46,7 @@ func main() {
 
 	log.Println("[REDIS] connected")
 
-	// ==============================
-	// 🎬 CATALOG CLIENT
-	// ==============================
+
 	connCat, err := grpc.Dial(
 		catalogAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -68,18 +60,14 @@ func main() {
 
 	log.Println("[CATALOG] connected")
 
-	// ==============================
-	// 🧠 SERVICE
-	// ==============================
+
 	service := internal.NewRecommendationService(
 		nc,
 		rdb,
 		catalogClient,
 	)
 
-	// ==============================
-	// 🚀 gRPC SERVER
-	// ==============================
+
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Fatalf("Listen error: %v", err)

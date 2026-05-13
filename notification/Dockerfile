@@ -16,5 +16,4 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 COPY --from=builder /notification-service .
 
-# Questo servizio solitamente non espone porte perché ascolta dal broker
 CMD ["./notification-service"]

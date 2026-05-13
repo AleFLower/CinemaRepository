@@ -1,12 +1,11 @@
 version: '3.8'
 
 services:
-  # --- INFRASTRUTTURA ---
 
   nats:
     image: nats:2.10-alpine
     container_name: nats-broker
-    command: "-js --sd /data" # Abilita JetStream e imposta cartella dati
+    command: "-js --sd /data"
     volumes:
       - nats_data:/data
     ports:
@@ -14,15 +13,11 @@ services:
       - "8222:8222"
 
 
-
-  # Redis (stato condiviso)
   redis:
     image: redis:7-alpine
     container_name: redis
     ports:
       - "6379:6379"
-
-  # --- MICROSERVIZI ---
 
   gateway:
     build:
@@ -46,7 +41,7 @@ services:
       - PORT=50052
       - CATALOG_FILE=/app/movies.json
 
-  # Booking Service (SCALABILE)
+ 
   booking:
     build:
       context: .
@@ -63,7 +58,7 @@ services:
       - NATS_SUBJECT_PREFIX=bookings.event
       - LOCK_TTL=5s
       - RESTORE_TIMEOUT=500ms
-      - DEFAULT_STRATEGY=default
+      - DEFAULT_STRATEGY=no-gap
     depends_on:
       - nats
       - redis

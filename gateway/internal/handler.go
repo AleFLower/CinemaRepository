@@ -45,9 +45,7 @@ func NewGatewayHandler(
 	}
 }
 
-//
-// 🎬 GET /movies
-//
+
 func (h *GatewayHandler) GetMovies(c *gin.Context) {
 	resp, err := h.catalogClient.GetMovies(context.Background(), &pb.Empty{})
 	if err != nil {
@@ -59,9 +57,7 @@ func (h *GatewayHandler) GetMovies(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-//
-// 💺 GET /seats/:id
-//
+
 func (h *GatewayHandler) GetSeats(c *gin.Context) {
 	projectionID := c.Param("id")
 
@@ -98,9 +94,6 @@ func (h *GatewayHandler) GetSeats(c *gin.Context) {
 	})
 }
 
-//
-// 🎟️ POST /book
-//
 func (h *GatewayHandler) ReserveSeat(c *gin.Context) {
 	var req struct {
 		ProjectionID string `json:"projection_id" binding:"required"`

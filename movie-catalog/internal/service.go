@@ -70,9 +70,7 @@ func NewCatalogService(configPath string) *CatalogService {
 	return svc
 }
 
-//
-// 🎬 MOVIES
-//
+
 func (s *CatalogService) GetMovies(ctx context.Context, req *pb.Empty) (*pb.MovieList, error) {
 
 	log.Println("Catalog: GetMovies request")
@@ -87,9 +85,7 @@ func (s *CatalogService) GetMovies(ctx context.Context, req *pb.Empty) (*pb.Movi
 	}, nil
 }
 
-//
-// 🎬 SINGLE MOVIE
-//
+
 func (s *CatalogService) GetMovie(ctx context.Context, req *pb.MovieRequest) (*pb.Movie, error) {
 
 	for i := range s.movies {
@@ -101,9 +97,7 @@ func (s *CatalogService) GetMovie(ctx context.Context, req *pb.MovieRequest) (*p
 	return nil, fmt.Errorf("movie with ID %s not found", req.Id)
 }
 
-//
-// 🎟️ ALL PROJECTIONS
-//
+
 func (s *CatalogService) GetProjections(ctx context.Context, req *pb.Empty) (*pb.ProjectionList, error) {
 
 	res := make([]*pb.Projection, len(s.projections))
@@ -117,9 +111,7 @@ func (s *CatalogService) GetProjections(ctx context.Context, req *pb.Empty) (*pb
 	}, nil
 }
 
-//
-// 🎟️ PROJECTIONS BY MOVIE
-//
+
 func (s *CatalogService) GetProjectionsByMovie(ctx context.Context, req *pb.MovieRequest) (*pb.ProjectionList, error) {
 
 	var result []*pb.Projection

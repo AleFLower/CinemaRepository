@@ -41,7 +41,7 @@ func (s *NotificationService) Start() {
 		s.sendEmail(event)
 		errAck := m.Ack()
     if errAck != nil {
-        log.Printf("❌ [ACK ERROR] %v", errAck)
+        log.Printf("[ACK ERROR] %v", errAck)
     }
 	},
 		nats.Durable("notification-worker"),
@@ -57,5 +57,5 @@ func (s *NotificationService) Start() {
 }
 
 func (s *NotificationService) sendEmail(e BookingEvent) {
-	log.Printf("📧 [EMAIL SENT] Confirmation for %s: Seat %d successfully booked!", e.UserID, e.SeatID)
+	log.Printf("[EMAIL SENT] Confirmation for %s: Seat %d successfully booked!", e.UserID, e.SeatID)
 }

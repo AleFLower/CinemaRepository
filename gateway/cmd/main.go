@@ -17,9 +17,7 @@ import (
 
 func main() {
 
-	// ==============================
-	// 🎬 CATALOG SERVICE
-	// ==============================
+        //connection to Catalog service
 	catAddr := utils.GetEnv("CATALOG_SERVICE_ADDR", "catalog-service:50052")
 
 	connCat, err := grpc.Dial(
@@ -31,9 +29,7 @@ func main() {
 		log.Fatalf("Catalog connection error: %v", err)
 	}
 
-	// ==============================
-	// 🎟️ BOOKING SERVICE
-	// ==============================
+	//connection to booking service
 	bookAddr := utils.GetEnv("BOOKING_SERVICE_ADDR", "booking:50051")
 
 	connBook, err := grpc.Dial(
@@ -44,10 +40,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Booking connection error: %v", err)
 	}
-
-	// ==============================
-	// 🧠 RECOMMENDATION SERVICE
-	// ==============================
+         
+        \\connection to recommendation service
 	recAddr := utils.GetEnv("RECOMMENDATION_SERVICE_ADDR", "recommendation-service:50053")
 
 	connRec, err := grpc.Dial(
@@ -59,34 +53,25 @@ func main() {
 		log.Fatalf("Recommendation connection error: %v", err)
 	}
 
-	// ==============================
-	// 🧩 HANDLER
-	// ==============================
 	handler := internal.NewGatewayHandler(
 		pb.NewCatalogServiceClient(connCat),
 		pb.NewBookingServiceClient(connBook),
 		pb.NewRecommendationServiceClient(connRec),
 	)
 
-	// ==============================
-	// 🌐 ROUTES
-	// ==============================
+
 	r := gin.Default()
 
 	r.GET("/movies", handler.GetMovies)
 	r.GET("/seats/:id", handler.GetSeats)
 	r.POST("/book", handler.ReserveSeat)
 
-	// New API
 	r.GET("/recommendations", handler.GetRecommendations)
 
-	// Projections APIs
+	
 	r.GET("/projections", handler.GetProjections)
 	r.GET("/projections/:id", handler.GetProjectionsByMovie)
 
-	// ==============================
-	// 🚀 START SERVER
-	// ==============================
 	log.Println("API Gateway running on :8080 with gRPC load balancing enabled")
 	r.Run(":8080")
 }

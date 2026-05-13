@@ -15,9 +15,6 @@ import (
 	pb "cinema-reservation/common/proto/pb"
 )
 
-// ==============================
-// EVENT
-// ==============================
 
 type BookingEvent struct {
 	BookingID    string `json:"booking_id"`
@@ -26,9 +23,7 @@ type BookingEvent struct {
 	SeatID       int32  `json:"seat_id"`
 }
 
-// ==============================
-// SERVICE
-// ==============================
+
 
 type RecommendationService struct {
 	pb.UnimplementedRecommendationServiceServer
@@ -37,9 +32,6 @@ type RecommendationService struct {
 	catalog pb.CatalogServiceClient
 }
 
-// ==============================
-// CONSTRUCTOR
-// ==============================
 
 func NewRecommendationService(
 	nc *nats.Conn,
@@ -62,9 +54,6 @@ func NewRecommendationService(
 	return s
 }
 
-// ==============================
-// CONSUMER
-// ==============================
 
 func (s *RecommendationService) consumeEvents() {
 	for {
@@ -102,9 +91,6 @@ func (s *RecommendationService) subscribe() error {
 	return err
 }
 
-// ==============================
-// EVENT PROCESSING (SMART)
-// ==============================
 
 func (s *RecommendationService) processEvent(e BookingEvent) {
 
@@ -146,9 +132,6 @@ func (s *RecommendationService) processEvent(e BookingEvent) {
 	}
 }
 
-// ==============================
-// GET RECOMMENDATIONS (RANKING)
-// ==============================
 
 type rankedMovie struct {
 	Movie *pb.Movie

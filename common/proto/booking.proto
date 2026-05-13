@@ -5,10 +5,8 @@ package booking;
 option go_package = "cinema-reservation/common/proto/pb";
 
 service BookingService {
-  // Ottiene la mappa dei posti per una specifica proiezione
   rpc GetSeats(SeatsRequest) returns (SeatsResponse);
   
-  // Tenta di prenotare un posto usando una determinata strategia
   rpc ReserveSeat(ReserveRequest) returns (ReserveResponse);
 }
 
@@ -18,7 +16,7 @@ message SeatsRequest {
 
 message SeatsResponse {
   string projection_id = 1;
-  map<int32, bool> seats = 2; // ID Posto -> Occupato
+  map<int32, bool> seats = 2;
 }
 
 message ReserveRequest {

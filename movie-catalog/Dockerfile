@@ -19,7 +19,6 @@ COPY --from=builder /catalog-service .
 
 COPY movies.json /app/movies.json
 
-# Porta gRPC
 EXPOSE 50052
 
 CMD ["./catalog-service"]

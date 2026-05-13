@@ -239,10 +239,9 @@ func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest
 
 	_, err = s.js.Publish(subject, data)
 	if err != nil {
-	        log.Printf("❌ [PUB ERROR] Errore invio su NATS: %v", err)
 		return nil, fmt.Errorf("event publish error: %v", err)
 	}
-	log.Printf("✅ [EVENT PUBLISHED] Subject: %s | Data: %s", subject, string(data)) // AGGIUNGI QUESTO
+	log.Printf("[EVENT PUBLISHED] Subject: %s | Data: %s", subject, string(data)) // AGGIUNGI QUESTO
 
 	room.Seats[req.SeatId] = true
 

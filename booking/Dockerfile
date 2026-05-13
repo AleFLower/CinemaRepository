@@ -8,7 +8,6 @@ RUN go mod download
 
 COPY . .
 
-# Compila il servizio Booking
 RUN CGO_ENABLED=0 GOOS=linux go build -o /booking-service ./booking/cmd/main.go
 
 FROM alpine:latest
@@ -18,7 +17,6 @@ WORKDIR /root/
 COPY --from=builder /booking-service .
 COPY movies.json /app/movies.json
 
-# Porta gRPC
 EXPOSE 50051
 
 CMD ["./booking-service"]
