@@ -41,7 +41,7 @@ func main() {
 		log.Fatalf("Booking connection error: %v", err)
 	}
          
-        \\connection to recommendation service
+        //connection to recommendation service
 	recAddr := utils.GetEnv("RECOMMENDATION_SERVICE_ADDR", "recommendation-service:50053")
 
 	connRec, err := grpc.Dial(
