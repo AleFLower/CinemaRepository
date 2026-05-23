@@ -1,273 +1,139 @@
-Ecco una versione **pulita, professionale e pronta per GitHub/portfolio**, senza eccesso di emoji e con struttura più “real-world”.
+
+# 🎬 CineFlix: Microservices Cinema Reservation System
+
+Welcome to **CineFlix**, a high-performance, event-driven cinema reservation platform built using Go, gRPC, and the Gin Web Framework. 
+
+This project features an interactive Netflix-style CLI Client, an API Gateway with built-in resilience, and multiple distributed backend microservices communicating via gRPC and event streams.
 
 ---
 
-```markdown
-# Cinema Reservation Platform
+## 🌐 Live Demo & Hosting Notice
 
-A distributed microservices system for a cinema booking platform built with Go, gRPC, Gin, Redis, NATS, and Docker Compose.
+The production backend of this architecture is currently deployed and hosted on an **AWS EC2 Instance**:
+* **API Gateway URL:** `http://3.232.139.1:8080`
 
-The project simulates a real-world event-driven architecture with booking, catalog, recommendations, and a CLI client.
-
----
-
-## Features
-
-- Movie catalog service (gRPC)
-- Seat reservation system with concurrency handling
-- Redis for caching, locking, and performance optimization
-- NATS JetStream for event-driven communication
-- Notification service (event consumer)
-- Recommendation service (user-based suggestions)
-- API Gateway (REST + Gin + gRPC clients)
-- Interactive CLI client (terminal-based UI)
+You can run the local CLI client immediately to interact with this live cloud deployment without setting up the backend cluster on your machine.
 
 ---
 
-## Architecture
+## 🏗️ System Architecture
+
+The platform is split into decoupled, specialized components:
+
+* **CLI Client (`main.go`):** A command-line user interface wrapped with clean terminal styling for browsing listings, inspecting seating maps, booking seats, and tracking user profiles.
+* **API Gateway:** Translates incoming HTTP REST requests into internal gRPC calls. It implements client-side load balancing (`round_robin`) to distribute traffic and wraps critical paths (like reservations) with a **Circuit Breaker** (`gobreaker`) to isolate microservice failures.
+* **Movie Catalog Service:** Manages films and historical schedule listings.
+* **Booking Service:** Manages active seat maps. Utilizes **Redis** for distributed locking/atomic operations and dispatches streams to **NATS JetStream**.
+* **Recommendation & Notification Services:** Asynchronous, event-driven services listening to broker topics to handle system events and user preferences.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* **Go** (v1.18 or higher) installed.
+* **Docker** and **Docker Compose** installed (only required for local cluster deployment).
+
+---
+
+### 🏎️ Option 1: Quick Start (Connect to Live AWS EC2 Backend)
+
+If you just want to test the application immediately using our hosted infrastructure, follow these steps:
+
+1. Locate your standalone CLI `main.go` file.
+2. Ensure the top configuration constant points to the live server:
+```go
+   const baseURL = "[http://3.232.139.1:8080](http://3.232.139.1:8080)"
 
 ```
 
-CLI → API Gateway → gRPC Services
-│
-┌──────────────┼────────────────┐
-│              │                │
-Catalog     Booking      Recommendation
-Service      Service          Service
-│              │                │
-└────── Redis + NATS Event Bus ─┘
-
-````
-
----
-
-## Requirements
-
-- Docker
-- Docker Compose
-- (Optional) Go 1.21+ for running CLI locally
-
----
-
-## Setup & Run (Local)
-
-### Clone the repository
+3. Run the application from your terminal:
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
-````
+   go run main.go
 
-### Start all services
+```
+
+---
+
+### 🐳 Option 2: Run the Entire System Locally
+
+To spin up the complete isolated microservices environment on your local machine using Docker Compose:
+
+#### 1. Update the Client Configuration
+
+Open the CLI client file (`main.go`) and change the `baseURL` to target your local machine:
+
+```go
+const baseURL = "http://localhost:8080"
+
+```
+
+#### 2. Start the Docker Containers
+
+From the root directory containing your `docker-compose.yml`, run:
 
 ```bash
 docker compose up --build
+
 ```
 
-Or in detached mode:
+This command builds and runs the following environment:
+
+* **nats-broker** (Ports `4222`, `8222`)
+* **redis** (Port `6379`)
+* **gateway** (Port `8080`)
+* **catalog-service**, **booking**, **notification-service**, **recommendation-service**
+
+#### 3. Run the CLI Client
+
+Open a new, separate terminal tab or window and execute:
 
 ```bash
-docker compose up -d --build
-```
-
-### Stop services
-
-```bash
-docker compose down
-```
-
-To remove volumes:
-
-```bash
-docker compose down -v
-```
-
----
-
-## Live Deployment
-
-The system is deployed and accessible via:
-
-API Gateway:
-[http://3.232.139.1:8080](http://3.232.139.1:8080)
-
----
-
-## Environment Configuration
-
-The API Gateway URL can be configured using an environment variable:
-
-```bash
-API_BASE_URL=http://3.232.139.1:8080
-```
-
-For local development:
-
-```bash
-API_BASE_URL=http://localhost:8080
-```
-
----
-
-## API Endpoints
-
-### Get Movies
-
-```
-GET /movies
-```
-
-### Get Projections
-
-```
-GET /projections
-GET /projections/:movieId
-```
-
-### Get Seats
-
-```
-GET /seats/:projectionId
-```
-
-### Book a Seat
-
-```
-POST /book
-```
-
-Body:
-
-```json
-{
-  "projection_id": "1",
-  "seat_id": 10,
-  "user_id": "user1"
-}
-```
-
-### Get Recommendations
-
-```
-GET /recommendations?user_id=user1
-```
-
----
-
-## CLI Client
-
-The project includes a CLI client with a terminal-based UI.
-
-### Run locally
-
-```bash
-cd cli
 go run main.go
+
 ```
 
-Or build:
+---
+
+## 🛠️ API REST Reference
+
+The API Gateway exposes the following REST matrix for external integrations, cURL, or Postman:
+
+| HTTP Method | Endpoint | Description |
+| --- | --- | --- |
+| **GET** | `/movies` | Fetch all available trending movies |
+| **GET** | `/projections` | Fetch all scheduled movie showtimes |
+| **GET** | `/projections/:id` | Fetch specific showtimes filtered by Movie ID |
+| **GET** | `/seats/:id` | Get interactive occupancy seat map for a Projection ID |
+| **POST** | `/book` | Submit a request to reserve a specific seat |
+| **GET** | `/recommendations` | Fetch movie recommendations (Requires `?user_id=XYZ`) |
+
+### Raw cURL Interaction Examples
+
+**Get Seating Map:**
 
 ```bash
-go build -o cineflix-cli
-./cineflix-cli
+curl -X GET [http://3.232.139.1:8080/seats/proj-1002](http://3.232.139.1:8080/seats/proj-1002)
+
 ```
 
----
-
-## Booking Flow
-
-1. User selects a movie
-2. Views available projections
-3. Checks seat availability
-4. Sends booking request to API Gateway
-5. Booking service:
-
-   * Validates request
-   * Uses Redis for distributed locking
-   * Publishes event to NATS
-6. Notification and Recommendation services react asynchronously
-
----
-
-## Event-Driven Architecture
-
-The system uses NATS JetStream for asynchronous communication.
-
-### Subjects
-
-* `bookings.event.*`
-* `bookings.>`
-
-### Used for
-
-* Seat reservation events
-* Notifications
-* Recommendation updates
-* Service integration
-
----
-
-## Technologies Used
-
-* Go (Golang)
-* gRPC
-* Gin Web Framework
-* Redis
-* NATS JetStream
-* Docker & Docker Compose
-* Circuit Breaker (Sony gobreaker)
-
----
-
-## Debug & Logs
-
-### View logs
+**Book a Seat:**
 
 ```bash
-docker compose logs -f
+curl -X POST [http://3.232.139.1:8080/book](http://3.232.139.1:8080/book) \
+     -H "Content-Type: application/json" \
+     -d '{"projection_id": "proj-1002", "seat_id": 42, "user_id": "user-abc"}'
+
+```
 ```
 
-### Full rebuild
+### Circuit Breaker Triggers
 
-```bash
-docker compose down -v
-docker compose up --build
-```
+The booking flow is protected by a circuit breaker. If the Booking Service experiences 3 or more consecutive internal errors or becomes unreachable, the Gateway will fail-fast and immediately return a `503 Service Unavailable` error code to protect database integrity:
 
----
-
-## Notes
-
-* API Gateway runs on port 8080
-* Internal communication uses gRPC over Docker network
-* All services are containerized
-* Designed for distributed systems learning
-
----
-
-## Project Goals
-
-This project demonstrates:
-
-* Microservices architecture
-* Event-driven design
-* gRPC communication patterns
-* Fault tolerance and resilience (circuit breaker)
-* Containerized deployment with Docker
-* Real-world backend system design
-
----
-
-## License
-
-This project is for educational purposes only.
+> *"The booking system is temporarily overloaded. Please try again in a few seconds."*
 
 ```
 
----
-
-Se vuoi, nel prossimo step posso anche:
-- :contentReference[oaicite:0]{index=0}
-- :contentReference[oaicite:1]{index=1}
-- oppure :contentReference[oaicite:2]{index=2}
 ```
