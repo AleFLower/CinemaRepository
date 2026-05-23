@@ -15,7 +15,7 @@ import (
 // 🌐 CONFIG
 // ==============================
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://3.232.139.1:8080";
 
 // ==============================
 // 🎬 MODELS
