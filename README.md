@@ -77,6 +77,11 @@ From the root directory containing your `docker-compose.yml`, run:
 docker compose up --build
 
 ```
+Launch & Scale Infrastructure: Open a terminal in the root directory of the project. To test how the API Gateway balances traffic across multiple instances of a service using the internal round-robin gRPC balancer, you can scale the backend nodes dynamically:
+
+Bash
+
+   docker compose up --build --scale catalog-service=3 --scale booking=2
 
 This command builds and runs the following environment:
 
