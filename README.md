@@ -1,63 +1,64 @@
+Ecco una versione **pulita, professionale e pronta per GitHub/portfolio**, senza eccesso di emoji e con struttura più “real-world”.
 
-# 🎬 Cinema Reservation Platform
+---
 
-A distributed microservices system for a cinema booking platform built with **Go, gRPC, Gin, Redis, NATS, and Docker Compose**.
+```markdown
+# Cinema Reservation Platform
+
+A distributed microservices system for a cinema booking platform built with Go, gRPC, Gin, Redis, NATS, and Docker Compose.
 
 The project simulates a real-world event-driven architecture with booking, catalog, recommendations, and a CLI client.
 
 ---
 
-## 🚀 Features
+## Features
 
-- 🎬 Movie catalog service (gRPC)
-- 🎟️ Seat reservation system with concurrency handling
-- 🧠 Redis for caching, locking, and performance
-- 📡 NATS for event-driven communication
-- 🔔 Notification service (event consumer)
-- 🎯 Recommendation service (user-based suggestions)
-- 🌐 API Gateway (REST + Gin + gRPC clients)
-- 🖥️ Interactive CLI client (Netflix-style terminal UI)
+- Movie catalog service (gRPC)
+- Seat reservation system with concurrency handling
+- Redis for caching, locking, and performance optimization
+- NATS JetStream for event-driven communication
+- Notification service (event consumer)
+- Recommendation service (user-based suggestions)
+- API Gateway (REST + Gin + gRPC clients)
+- Interactive CLI client (terminal-based UI)
 
 ---
 
-## 🧱 Architecture
+## Architecture
 
 ```
 
 CLI → API Gateway → gRPC Services
 │
-┌───────────────┼────────────────┐
-│               │                │
-Catalog Service   Booking Service   Recommendation Service
-│               │                │
-└─────── Redis + NATS Event Bus ─┘
+┌──────────────┼────────────────┐
+│              │                │
+Catalog     Booking      Recommendation
+Service      Service          Service
+│              │                │
+└────── Redis + NATS Event Bus ─┘
 
 ````
 
 ---
 
-## 📦 Requirements
-
-Make sure you have installed:
+## Requirements
 
 - Docker
 - Docker Compose
-- (Optional) Go 1.21+ (for running CLI locally)
+- (Optional) Go 1.21+ for running CLI locally
 
 ---
 
-## ⚙️ Setup & Run
+## Setup & Run (Local)
 
-### 1. Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/<your-username>/<repo-name>.git
 cd <repo-name>
 ````
 
----
-
-### 2. Start all services
+### Start all services
 
 ```bash
 docker compose up --build
@@ -69,15 +70,13 @@ Or in detached mode:
 docker compose up -d --build
 ```
 
----
-
-### 3. Stop everything
+### Stop services
 
 ```bash
 docker compose down
 ```
 
-To also remove volumes:
+To remove volumes:
 
 ```bash
 docker compose down -v
@@ -85,51 +84,61 @@ docker compose down -v
 
 ---
 
-## 🌐 Services
+## Live Deployment
 
-After startup, services are available at:
+The system is deployed and accessible via:
 
-| Service            | URL                                            |
-| ------------------ | ---------------------------------------------- |
-| 🌐 API Gateway     | [http://localhost:8080](http://localhost:8080) |
-| 📡 NATS Monitoring | [http://localhost:8222](http://localhost:8222) |
-| 🧠 Redis           | localhost:6379                                 |
+API Gateway:
+[http://3.232.139.1:8080](http://3.232.139.1:8080)
 
 ---
 
-## 🎬 API Endpoints
+## Environment Configuration
 
-### 📌 Get Movies
+The API Gateway URL can be configured using an environment variable:
 
-```http
-GET /movies
+```bash
+API_BASE_URL=http://3.232.139.1:8080
+```
+
+For local development:
+
+```bash
+API_BASE_URL=http://localhost:8080
 ```
 
 ---
 
-### 📌 Get Projections
+## API Endpoints
 
-```http
+### Get Movies
+
+```
+GET /movies
+```
+
+### Get Projections
+
+```
 GET /projections
 GET /projections/:movieId
 ```
 
----
+### Get Seats
 
-### 📌 Get Seats
-
-```http
+```
 GET /seats/:projectionId
 ```
 
----
+### Book a Seat
 
-### 📌 Book a Seat
-
-```http
+```
 POST /book
-Content-Type: application/json
+```
 
+Body:
+
+```json
 {
   "projection_id": "1",
   "seat_id": 10,
@@ -137,28 +146,26 @@ Content-Type: application/json
 }
 ```
 
----
+### Get Recommendations
 
-### 📌 Get Recommendations
-
-```http
+```
 GET /recommendations?user_id=user1
 ```
 
 ---
 
-## 🖥️ CLI Client (CineFlix Terminal UI)
+## CLI Client
 
-The project includes an interactive CLI client inspired by Netflix UI.
+The project includes a CLI client with a terminal-based UI.
 
-### Run CLI locally
+### Run locally
 
 ```bash
 cd cli
 go run main.go
 ```
 
-Or build it:
+Or build:
 
 ```bash
 go build -o cineflix-cli
@@ -167,40 +174,40 @@ go build -o cineflix-cli
 
 ---
 
-## 🎟️ Booking Flow
+## Booking Flow
 
 1. User selects a movie
 2. Views available projections
 3. Checks seat availability
-4. Books a seat via API Gateway
+4. Sends booking request to API Gateway
 5. Booking service:
 
    * Validates request
-   * Uses Redis for locking
+   * Uses Redis for distributed locking
    * Publishes event to NATS
-6. Notification & recommendation services react to events
+6. Notification and Recommendation services react asynchronously
 
 ---
 
-## 📡 Event-Driven Architecture
+## Event-Driven Architecture
 
-The system uses **NATS JetStream** for messaging.
+The system uses NATS JetStream for asynchronous communication.
 
-### Subjects:
+### Subjects
 
 * `bookings.event.*`
 * `bookings.>`
 
-### Used for:
+### Used for
 
 * Seat reservation events
 * Notifications
 * Recommendation updates
-* System integration
+* Service integration
 
 ---
 
-## 🧠 Technologies Used
+## Technologies Used
 
 * Go (Golang)
 * gRPC
@@ -212,7 +219,7 @@ The system uses **NATS JetStream** for messaging.
 
 ---
 
-## 🧪 Debug & Logs
+## Debug & Logs
 
 ### View logs
 
@@ -220,7 +227,7 @@ The system uses **NATS JetStream** for messaging.
 docker compose logs -f
 ```
 
-### Rebuild everything cleanly
+### Full rebuild
 
 ```bash
 docker compose down -v
@@ -229,28 +236,38 @@ docker compose up --build
 
 ---
 
-## ⚠️ Notes
+## Notes
 
-* API Gateway runs on port **8080**
-* Internal communication uses **gRPC over Docker network**
-* Services are fully containerized
-* Designed for learning distributed systems & microservices
+* API Gateway runs on port 8080
+* Internal communication uses gRPC over Docker network
+* All services are containerized
+* Designed for distributed systems learning
 
 ---
 
-## 📌 Project Goal
+## Project Goals
 
-This project is built to demonstrate:
+This project demonstrates:
 
-* Microservices design
-* Event-driven architecture
-* gRPC communication
-* Fault tolerance (circuit breaker)
-* Containerized deployment
+* Microservices architecture
+* Event-driven design
+* gRPC communication patterns
+* Fault tolerance and resilience (circuit breaker)
+* Containerized deployment with Docker
 * Real-world backend system design
 
 ---
 
-## 📜 License
+## License
 
 This project is for educational purposes only.
+
+```
+
+---
+
+Se vuoi, nel prossimo step posso anche:
+- :contentReference[oaicite:0]{index=0}
+- :contentReference[oaicite:1]{index=1}
+- oppure :contentReference[oaicite:2]{index=2}
+```
