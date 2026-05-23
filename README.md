@@ -126,7 +126,7 @@ curl -X POST [http://3.232.139.1:8080/book](http://3.232.139.1:8080/book) \
      -d '{"projection_id": "proj-1002", "seat_id": 42, "user_id": "user-abc"}'
 
 ```
-```
+
 
 ### Circuit Breaker Triggers
 
