@@ -1,5 +1,5 @@
 
-# 🎬 CineFlix: Microservices Cinema Reservation System
+# 🎬 Cinema reservation microservices application
 
 This is an event-driven cinema reservation platform built using Go, gRPC, and the Gin Web Framework. 
 
