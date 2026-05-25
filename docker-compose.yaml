@@ -58,7 +58,7 @@ services:
       - NATS_SUBJECT_PREFIX=bookings.event
       - LOCK_TTL=5s
       - RESTORE_TIMEOUT=500ms
-      - DEFAULT_STRATEGY=no-gap
+      - DEFAULT_STRATEGY=default
     depends_on:
       - nats
       - redis

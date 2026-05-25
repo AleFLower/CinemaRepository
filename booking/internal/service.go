@@ -27,7 +27,6 @@ type BookingEvent struct {
 type RoomState struct {
 	Mu       sync.Mutex
 	Seats    map[int32]bool
-	Strategy string
 }
 
 type BookingService struct {
@@ -36,6 +35,7 @@ type BookingService struct {
 	nc          *nats.Conn
 	js          nats.JetStreamContext
 	redis       *redis.Client
+	strategy    SeatStrategy
 }
 
 var unlockScript = redis.NewScript(`
@@ -74,7 +74,6 @@ func NewBookingService(nc *nats.Conn, rdb *redis.Client, configPath string) *Boo
 		Projections []struct {
 			ID         string `json:"id"`
 			TotalSeats int    `json:"total_seats"`
-			Strategy   string `json:"strategy"`
 		} `json:"projections"`
 	}
 
@@ -91,22 +90,21 @@ func NewBookingService(nc *nats.Conn, rdb *redis.Client, configPath string) *Boo
 			seats[i] = false
 		}
 
-		strategy := p.Strategy
-		if strategy == "" {
-			strategy = utils.GetEnv("DEFAULT_STRATEGY", "default")
-		}
 
 		projections[p.ID] = &RoomState{
 			Seats:    seats,
-			Strategy: strategy,
 		}
 	}
+	
+	chosenStrategy := utils.GetEnv("DEFAULT_STRATEGY", "default")
+        strat, _ := SeatStrategyFactory(chosenStrategy)
 
 	s := &BookingService{
 		projections: projections,
 		nc:          nc,
 		js:          js,
 		redis:       rdb,
+		strategy:    strat,
 	}
 
 	s.restoreState(subjectEvents)
@@ -205,13 +203,12 @@ func (s *BookingService) ReserveSeat(ctx context.Context, req *pb.ReserveRequest
 	}
 
 	defer s.releaseLock(ctx, lockKey, token)
-
-	strategy, _ := SeatStrategyFactory(room.Strategy)
+	
 
 	room.Mu.Lock()
 	defer room.Mu.Unlock()
 
-	if err := strategy.Validate(room, req.SeatId); err != nil {
+	if err := s.strategy.Validate(room, req.SeatId); err != nil {
 		return &pb.ReserveResponse{
 			Success: false,
 			Message: err.Error(),

@@ -16,6 +16,10 @@ import (
 // ==============================
 
 const baseURL = "http://localhost:8080"
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4ab6b74 (update project)
 
 // ==============================
 // 🎬 MODELS
@@ -218,6 +222,12 @@ func getSeats(projectionID string) {
 
 	var data SeatsResponse
 	json.NewDecoder(resp.Body).Decode(&data)
+	
+	// CONTROLLO CRITICO: Se non ci sono posti, la proiezione non esiste o è vuota
+	if len(data.Seats) == 0 {
+		fmt.Printf("🚫 No data found for Projection ID: %s. Please check the ID and try again.\n", projectionID)
+		return
+	}
 
 	fmt.Printf("🎟️ Projection: %s\n\n", data.ProjectionID)
 
@@ -269,7 +279,7 @@ func handleBooking(reader *bufio.Reader) {
 	section("Booking Result")
 
 	for k, v := range result {
-		fmt.Printf("✔ %s: %v\n", strings.Title(k), v)
+		fmt.Printf(" %s: %v\n", strings.Title(k), v)
 	}
 }
 
