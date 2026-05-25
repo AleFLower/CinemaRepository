@@ -128,14 +128,19 @@ Test how the API Gateway protects the system when the **Booking Service** is dow
 * **Action:** Stop the booking container and attempt multiple requests.
 
 ```bash
-# 1. Stop booking service
-docker stop cinema-booking-service
+# Stop one booking service instance
+docker stop $(docker ps -q --filter "name=booking" | head -n 1)
 
-# 2. Stress test
+# Stress test
 for i in {1..5}; do
   curl -s -X POST http://localhost:8080/book \
   -H "Content-Type: application/json" \
-  -d '{"projection_id":"p101","seat_id":1,"user_id":"test-user"}'
+  -d '{
+    "projection_id":"p101",
+    "seat_id":1,
+    "user_id":"test-user"
+  }'
+
   echo -e "\n"
 done
 
@@ -154,15 +159,18 @@ Verify that the **Distributed Redis Lock** prevents two users from booking the s
 ```bash
 for i in {1..20}; do
 (
-  curl -s -X POST http://localhost:8080/book \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"projection_id\":\"p201\",
-    \"seat_id\":25,
-    \"user_id\":\"user$i\"
-  }" 
+  result=$(curl -s -X POST http://localhost:8080/book \
+    -H "Content-Type: application/json" \
+    -d "{
+      \"projection_id\":\"p201\",
+      \"seat_id\":25,
+      \"user_id\":\"user$i\"
+    }" | jq -r '.message')
+
+  echo "user$i -> $result"
 ) &
 done
+
 wait
 
 ```
@@ -178,19 +186,23 @@ Verify that **NATS JetStream** prevents message loss if the Notification Service
 * **Scenario:** Delayed event processing.
 
 ```bash
-# 1. Stop the Notification Service
-docker stop cinema-notification-service
+# Stop notification service
+docker stop $(docker ps -q --filter "name=notification" | head -n 1)
 
-# 2. Book a seat (the booking will succeed)
+# Book a seat
 curl -X POST http://localhost:8080/book \
 -H "Content-Type: application/json" \
--d '{"projection_id":"p201","seat_id":10,"user_id":"event-test"}'
+-d '{
+  "projection_id":"p201",
+  "seat_id":10,
+  "user_id":"event-test"
+}'
 
-# 3. Restart the service
-docker start cinema-notification-service
+# Restart notification service
+docker start $(docker ps -aq --filter "name=notification" | head -n 1)
 
-# 4. Verify logs
-docker logs -f cinema-notification-service
+# Check logs
+docker logs -f $(docker ps -q --filter "name=notification" | head -n 1)
 ```
 
 * **Expected Result:** As soon as the service restarts, it will automatically pull the "pending" message from NATS and process the notification. Check the logs with `docker logs -f notification-service`.
@@ -210,11 +222,12 @@ docker compose up -d --scale booking=3
 
 # 2. Monitor logs to see Round-Robin in action
 # Observe how the gateway distributes gRPC requests among the 3 instances
-docker logs -f cinema-gateway
+docker logs -f $(docker ps -q --filter "name=gateway" | head -n 1)
 
 # 3. In another terminal, kill one of the booking instances
 # This command finds the ID of one running booking container and stops it
-docker stop $(docker ps -q --filter name=cinema-booking-service | head -n 1)
+# Stop one booking instance
+docker stop $(docker ps -q --filter "name=booking" | head -n 1)
 
 ```
 
