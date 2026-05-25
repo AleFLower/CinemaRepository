@@ -1,18 +1,9 @@
 
 # 🎬 CineFlix: Microservices Cinema Reservation System
 
-Welcome to **CineFlix**, a high-performance, event-driven cinema reservation platform built using Go, gRPC, and the Gin Web Framework. 
+This is an event-driven cinema reservation platform built using Go, gRPC, and the Gin Web Framework. 
 
-This project features an interactive Netflix-style CLI Client, an API Gateway with built-in resilience, and multiple distributed backend microservices communicating via gRPC and event streams.
-
----
-
-## 🌐 Live Demo & Hosting Notice
-
-The production backend of this architecture is currently deployed and hosted on an **AWS EC2 Instance**:
-* **API Gateway URL:** `http://3.232.139.1:8080`
-
-You can run the local CLI client immediately to interact with this live cloud deployment without setting up the backend cluster on your machine.
+This project features an interactive CLI Client, an API Gateway with built-in resilience, and multiple distributed backend microservices communicating via gRPC and event streams.
 
 ---
 
@@ -36,27 +27,7 @@ The platform is split into decoupled, specialized components:
 
 ---
 
-### 🏎️ Option 1: Quick Start (Connect to Live AWS EC2 Backend)
-
-If you just want to test the application immediately using our hosted infrastructure, follow these steps:
-
-1. Locate your standalone CLI `main.go` file.
-2. Ensure the top configuration constant points to the live server:
-```go
-   const baseURL = "[http://3.232.139.1:8080](http://3.232.139.1:8080)"
-
-```
-
-3. Run the application from your terminal:
-
-```bash
-   go run main.go
-
-```
-
----
-
-### 🐳 Option 2: Run the Entire System Locally
+### 🐳 Run the Entire System Locally
 
 To spin up the complete isolated microservices environment on your local machine using Docker Compose:
 
@@ -97,7 +68,7 @@ Launch & Scale Infrastructure: Open a terminal in the root directory of the proj
 docker compose down -v
 ```
 
-#### 3. Run the CLI Client
+#### 3. Live demo: Run the CLI Client
 
 Open a new, separate terminal tab or window and execute:
 
@@ -139,13 +110,120 @@ curl -X POST [http://3.232.139.1:8080/book](http://3.232.139.1:8080/book) \
 
 ```
 
-
 ### Circuit Breaker Triggers
 
 The booking flow is protected by a circuit breaker. If the Booking Service experiences 3 or more consecutive internal errors or becomes unreachable, the Gateway will fail-fast and immediately return a `503 Service Unavailable` error code to protect database integrity:
 
 > *"The booking system is temporarily overloaded. Please try again in a few seconds."*
 
-```
+## 🧪 Testing & Resilience Scenarios
+
+You can perform the following stress tests and experiments locally to verify the system's fault tolerance and consistency.
+
+### 1. Circuit Breaker Evaluation
+
+Test how the API Gateway protects the system when the **Booking Service** is down.
+
+* **Scenario:** Intentional service failure.
+* **Action:** Stop the booking container and attempt multiple requests.
+
+```bash
+# 1. Stop the booking service
+docker stop $(docker ps -q --filter name=booking)
+
+# 2. Run the stress test (repeated failures)
+for i in {1..5}; do
+  curl -X POST http://localhost:8080/book \
+  -H "Content-Type: application/json" \
+  -d '{"projection_id":"p101","seat_id":1,"user_id":"test-user"}'
+  echo -e "\n"
+done
 
 ```
+
+* **Expected Result:** After 3 failures (default threshold), the Circuit Breaker trips. Subsequent requests will return `503 Service Unavailable` immediately without attempting to contact the service.
+
+---
+
+### 2. Concurrency & Race Condition Test
+
+Verify that the **Distributed Redis Lock** prevents two users from booking the same seat at the same exact time.
+
+* **Scenario:** 20 users competing for seat #25.
+
+```bash
+for i in {1..20}; do
+(
+  curl -s -X POST http://localhost:8080/book \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"projection_id\":\"p201\",
+    \"seat_id\":25,
+    \"user_id\":\"user$i\"
+  }" &
+)
+done
+wait
+
+```
+
+* **Expected Result:** Only **one** request succeeds with a "Booking Successful" message. The other 19 requests will return an error (e.g., "Seat already occupied" or "Lock acquisition failed").
+
+---
+
+### 3. Asynchronous Recovery (Notification Service)
+
+Verify that **NATS JetStream** prevents message loss if the Notification Service is offline.
+
+* **Scenario:** Delayed event processing.
+
+```bash
+# 1. Stop the Notification Service
+docker stop $(docker ps -q --filter name=notification)
+
+# 2. Book a seat (the booking will succeed)
+curl -X POST http://localhost:8080/book \
+-H "Content-Type: application/json" \
+-d '{"projection_id":"p201","seat_id":10,"user_id":"event-test"}'
+
+# 3. Restart the service
+docker start $(docker ps -q --filter name=notification)
+
+```
+
+* **Expected Result:** As soon as the service restarts, it will automatically pull the "pending" message from NATS and process the notification. Check the logs with `docker logs -f notification-service`.
+
+---
+
+### 4. High Availability & Load Balancing
+
+Test the system's ability to stay online while individual instances are killed.
+
+* **Scenario:** Scaling and Service Replication.
+
+```bash
+# 1. Scale the booking service to 3 instances
+docker compose up -d --scale booking=3
+
+# 2. Monitor logs to see Round-Robin in action
+docker compose logs -f gateway
+
+# 3. In another terminal, kill one of the booking instances
+docker stop $(docker ps -q --filter name=booking | head -n 1)
+
+```
+
+* **Expected Result:** The API Gateway (via gRPC load balancing) will detect the failure and reroute all traffic to the remaining 2 healthy instances. No downtime should be experienced by the user.
+
+---
+
+### 🧹 Cleanup Tests
+
+To reset the database and event streams after testing:
+
+```bash
+docker compose down -v
+docker compose up --build
+
+```
+
