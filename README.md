@@ -60,7 +60,7 @@ This command builds and runs the following environment:
 Launch & Scale Infrastructure: Open a terminal in the root directory of the project. To test how the API Gateway balances traffic across multiple instances of a service using the internal round-robin gRPC balancer, you can scale the backend nodes dynamically:
 ```bash
 
-   docker compose up --build --scale catalog-service=3 --scale booking=2
+   docker compose up -d --scale cinema-catalog-service=3 --scale cinema-booking-service=2
 ```
 
 🧹 How to Clean and Restart Everything From Scratch
@@ -128,12 +128,12 @@ Test how the API Gateway protects the system when the **Booking Service** is dow
 * **Action:** Stop the booking container and attempt multiple requests.
 
 ```bash
-# 1. Stop the booking service
-docker stop $(docker ps -q --filter name=booking)
+# 1. Stop booking service
+docker stop cinema-booking-service
 
-# 2. Run the stress test (repeated failures)
+# 2. Stress test
 for i in {1..5}; do
-  curl -X POST http://localhost:8080/book \
+  curl -s -X POST http://localhost:8080/book \
   -H "Content-Type: application/json" \
   -d '{"projection_id":"p101","seat_id":1,"user_id":"test-user"}'
   echo -e "\n"
@@ -160,14 +160,14 @@ for i in {1..20}; do
     \"projection_id\":\"p201\",
     \"seat_id\":25,
     \"user_id\":\"user$i\"
-  }" &
-)
+  }" 
+) &
 done
 wait
 
 ```
 
-* **Expected Result:** Only **one** request succeeds with a "Booking Successful" message. The other 19 requests will return an error (e.g., "Seat already occupied" or "Lock acquisition failed").
+* **Expected Result:** Only **one** request succeeds with a "Booking Successful" message. The other 19 requests will return an error (e.g., "Seat already occupied" or "Lock acquisition failed").You can try with multiple booking istances too.
 
 ---
 
@@ -179,7 +179,7 @@ Verify that **NATS JetStream** prevents message loss if the Notification Service
 
 ```bash
 # 1. Stop the Notification Service
-docker stop $(docker ps -q --filter name=notification)
+docker stop cinema-notification-service
 
 # 2. Book a seat (the booking will succeed)
 curl -X POST http://localhost:8080/book \
@@ -187,8 +187,10 @@ curl -X POST http://localhost:8080/book \
 -d '{"projection_id":"p201","seat_id":10,"user_id":"event-test"}'
 
 # 3. Restart the service
-docker start $(docker ps -q --filter name=notification)
+docker start cinema-notification-service
 
+# 4. Verify logs
+docker logs -f cinema-notification-service
 ```
 
 * **Expected Result:** As soon as the service restarts, it will automatically pull the "pending" message from NATS and process the notification. Check the logs with `docker logs -f notification-service`.
@@ -203,13 +205,16 @@ Test the system's ability to stay online while individual instances are killed.
 
 ```bash
 # 1. Scale the booking service to 3 instances
+# This creates 3 replica containers of the booking service
 docker compose up -d --scale booking=3
 
 # 2. Monitor logs to see Round-Robin in action
-docker compose logs -f gateway
+# Observe how the gateway distributes gRPC requests among the 3 instances
+docker logs -f cinema-gateway
 
 # 3. In another terminal, kill one of the booking instances
-docker stop $(docker ps -q --filter name=booking | head -n 1)
+# This command finds the ID of one running booking container and stops it
+docker stop $(docker ps -q --filter name=cinema-booking-service | head -n 1)
 
 ```
 
