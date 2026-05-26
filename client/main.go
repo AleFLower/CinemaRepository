@@ -12,17 +12,13 @@ import (
 )
 
 // ==============================
-// 🌐 CONFIG
+//  CONFIG
 // ==============================
 
 const baseURL = "http://localhost:8080"
-<<<<<<< HEAD
-=======
-
->>>>>>> 4ab6b74 (update project)
 
 // ==============================
-// 🎬 MODELS
+//  MODELS
 // ==============================
 
 type Movie struct {
@@ -59,13 +55,12 @@ type RecommendationResponse struct {
 }
 
 // ==============================
-// 🎨 UI HELPERS (Netflix Style)
+//  UI HELPERS 
 // ==============================
 
 func header() {
 	fmt.Println("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println("🎬  CINEMA STREAMING PLATFORM")
-	fmt.Println("   ✨ Welcome to CineFlix CLI")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 }
 
@@ -89,7 +84,7 @@ func input(prompt string) string {
 }
 
 // ==============================
-// 🚀 MAIN
+//  MAIN
 // ==============================
 
 func main() {
@@ -144,7 +139,7 @@ func main() {
 }
 
 // ==============================
-// 🎬 MOVIES
+//  MOVIES
 // ==============================
 
 func getMovies() {
@@ -166,7 +161,7 @@ func getMovies() {
 }
 
 // ==============================
-// 🎟️ PROJECTIONS
+//  PROJECTIONS
 // ==============================
 
 func getProjections(movieID string) {
@@ -202,7 +197,7 @@ func getProjections(movieID string) {
 }
 
 // ==============================
-// 💺 SEATS
+//  SEATS
 // ==============================
 
 func getSeats(projectionID string) {
@@ -241,7 +236,7 @@ func getSeats(projectionID string) {
 }
 
 // ==============================
-// 🎟️ BOOKING
+// BOOKING
 // ==============================
 
 func handleBooking(reader *bufio.Reader) {
@@ -284,7 +279,7 @@ func handleBooking(reader *bufio.Reader) {
 }
 
 // ==============================
-// 🎯 RECOMMENDATIONS
+// RECOMMENDATIONS
 // ==============================
 
 func getRecommendations(userID string) {
