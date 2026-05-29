@@ -33,7 +33,7 @@ To spin up the complete isolated microservices environment on your local machine
 
 #### 1. Update the Client Configuration
 
-Open the CLI client file (`main.go`) and change the `baseURL` to target your local machine:
+Open the CLI client file (main.go) and ensure that the baseURL points to your local machine:
 
 ```go
 const baseURL = "http://localhost:8080"
