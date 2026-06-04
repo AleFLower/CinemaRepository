@@ -93,9 +93,8 @@ The API Gateway exposes the following REST matrix for external integrations, cUR
 | **GET** | `/recommendations` | Fetch movie recommendations (Requires `?user_id=XYZ`) |
 
 
-```
 
-### Circuit Breaker Triggers
+ ### Circuit Breaker Triggers
 
 The booking flow is protected by a circuit breaker. If the Booking Service experiences 3 or more consecutive internal errors or becomes unreachable, the Gateway will fail-fast and immediately return a `503 Service Unavailable` error code to protect database integrity:
 
