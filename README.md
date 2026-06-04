@@ -94,19 +94,16 @@ The API Gateway exposes the following REST matrix for external integrations, cUR
 
 
 
- ### Circuit Breaker Triggers
-
-The booking flow is protected by a circuit breaker. If the Booking Service experiences 3 or more consecutive internal errors or becomes unreachable, the Gateway will fail-fast and immediately return a `503 Service Unavailable` error code to protect database integrity:
-
-> *"The booking system is temporarily overloaded. Please try again in a few seconds."*
 
 ## 🧪 Testing & Resilience Scenarios
 
-You can perform the following stress tests and experiments locally to verify the system's fault tolerance and consistency.
+You can perform the following stress tests and experiments locally to verify the system's fault tolerance and consistency. 
 
 ### 1. Circuit Breaker Evaluation
 
-Test how the API Gateway protects the system when the **Booking Service** is down.
+Test how the API Gateway protects the system when the **Booking Service** is down.The booking flow is protected by a circuit breaker. If the Booking Service experiences 3 or more consecutive internal errors or becomes unreachable, the Gateway will fail-fast and immediately return a `503 Service Unavailable` error code to protect database integrity:
+
+> *"The booking system is temporarily overloaded. Please try again in a few seconds."*
 
 * **Scenario:** Intentional service failure.
 * **Action:** Stop the booking container and attempt multiple requests.
