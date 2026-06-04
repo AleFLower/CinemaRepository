@@ -92,21 +92,6 @@ The API Gateway exposes the following REST matrix for external integrations, cUR
 | **POST** | `/book` | Submit a request to reserve a specific seat |
 | **GET** | `/recommendations` | Fetch movie recommendations (Requires `?user_id=XYZ`) |
 
-### Raw cURL Interaction Examples
-
-**Get Seating Map:**
-
-```bash
-curl -X GET [http://3.232.139.1:8080/seats/proj-1002](http://3.232.139.1:8080/seats/proj-1002)
-
-```
-
-**Book a Seat:**
-
-```bash
-curl -X POST [http://3.232.139.1:8080/book](http://3.232.139.1:8080/book) \
-     -H "Content-Type: application/json" \
-     -d '{"projection_id": "proj-1002", "seat_id": 42, "user_id": "user-abc"}'
 
 ```
 
